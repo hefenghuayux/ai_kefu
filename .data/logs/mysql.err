@@ -1,0 +1,58 @@
+2026-05-13T07:19:29.171551Z 0 [System] [MY-013169] [Server] /mnt/e/environment/mysql-8.0.45/usr/sbin/mysqld (mysqld 8.0.45-0ubuntu0.24.04.1) initializing of server in progress as process 7621
+2026-05-13T07:19:29.203407Z 0 [Warning] [MY-010159] [Server] Setting lower_case_table_names=2 because file system for /mnt/e/workspacce/AI/ai_kefu/.data/mysql/data/ is case insensitive
+2026-05-13T07:19:29.253125Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-05-13T07:19:30.518284Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-05-13T07:19:33.506445Z 6 [Warning] [MY-010453] [Server] root@localhost is created with an empty password ! Please consider switching off the --initialize-insecure option.
+2026-05-13T07:19:37.037608Z 0 [ERROR] [MY-010095] [Server] Failed to access directory for --secure-file-priv. Please make sure that directory exists and is accessible by MySQL Server. Supplied value : /var/lib/mysql-files
+2026-05-13T07:20:07.170340Z 0 [System] [MY-013169] [Server] /mnt/e/environment/mysql-8.0.45/usr/sbin/mysqld (mysqld 8.0.45-0ubuntu0.24.04.1) initializing of server in progress as process 7743
+2026-05-13T07:20:07.205590Z 0 [Warning] [MY-010159] [Server] Setting lower_case_table_names=2 because file system for /mnt/e/workspacce/AI/ai_kefu/.data/mysql/data/ is case insensitive
+2026-05-13T07:20:07.276866Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-05-13T07:20:08.526257Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-05-13T07:20:11.116468Z 6 [Warning] [MY-010453] [Server] root@localhost is created with an empty password ! Please consider switching off the --initialize-insecure option.
+2026-05-13T07:20:14.867997Z 0 [Warning] [MY-010097] [Server] Insecure configuration for --secure-file-priv: Current value does not restrict location of generated files. Consider setting it to a valid, non-empty path.
+2026-05-13T07:20:14.869470Z 0 [System] [MY-010116] [Server] /mnt/e/environment/mysql-8.0.45/usr/sbin/mysqld (mysqld 8.0.45-0ubuntu0.24.04.1) starting as process 7801
+2026-05-13T07:20:14.903558Z 0 [Warning] [MY-010159] [Server] Setting lower_case_table_names=2 because file system for /mnt/e/workspacce/AI/ai_kefu/.data/mysql/data/ is case insensitive
+2026-05-13T07:20:14.933270Z 0 [Warning] [MY-000054] [Server] World-writable config file '/mnt/e/workspacce/AI/ai_kefu/.data/mysql/data/auto.cnf' is ignored.
+2026-05-13T07:20:14.934719Z 0 [Warning] [MY-010107] [Server] World-writable config file '/mnt/e/workspacce/AI/ai_kefu/.data/mysql/data/auto.cnf' has been removed.
+2026-05-13T07:20:14.947383Z 0 [Warning] [MY-010075] [Server] No existing UUID has been found, so we assume that this is the first time that this server has been started. Generating a new UUID: 2fd2fa5a-4e9c-11f1-801f-bc091b5fe29f.
+2026-05-13T07:20:14.980655Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-05-13T07:20:16.048987Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-05-13T07:20:16.800554Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+2026-05-13T07:20:16.801191Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+2026-05-13T07:20:16.828695Z 0 [ERROR] [MY-010270] [Server] Can't start server : Bind on unix socket: Operation not supported
+2026-05-13T07:20:16.828862Z 0 [ERROR] [MY-010258] [Server] Do you already have another mysqld server running on socket: /mnt/e/workspacce/AI/ai_kefu/.data/run/mysql.sock ?
+2026-05-13T07:20:16.829203Z 0 [ERROR] [MY-010119] [Server] Aborting
+2026-05-13T07:20:18.389910Z 0 [System] [MY-010910] [Server] /mnt/e/environment/mysql-8.0.45/usr/sbin/mysqld: Shutdown complete (mysqld 8.0.45-0ubuntu0.24.04.1)  (Ubuntu).
+2026-05-13T07:21:58.322253Z 0 [System] [MY-013169] [Server] /mnt/e/environment/mysql-8.0.45/usr/sbin/mysqld (mysqld 8.0.45-0ubuntu0.24.04.1) initializing of server in progress as process 7953
+2026-05-13T07:21:58.359333Z 0 [Warning] [MY-010159] [Server] Setting lower_case_table_names=2 because file system for /mnt/e/workspacce/AI/ai_kefu/.data/mysql/data/ is case insensitive
+2026-05-13T07:21:58.440119Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-05-13T07:21:59.793191Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-05-13T07:22:03.267724Z 6 [Warning] [MY-010453] [Server] root@localhost is created with an empty password ! Please consider switching off the --initialize-insecure option.
+2026-05-13T07:22:07.154075Z 0 [Warning] [MY-010097] [Server] Insecure configuration for --secure-file-priv: Current value does not restrict location of generated files. Consider setting it to a valid, non-empty path.
+2026-05-13T07:22:07.155431Z 0 [System] [MY-010116] [Server] /mnt/e/environment/mysql-8.0.45/usr/sbin/mysqld (mysqld 8.0.45-0ubuntu0.24.04.1) starting as process 8012
+2026-05-13T07:22:07.190153Z 0 [Warning] [MY-010159] [Server] Setting lower_case_table_names=2 because file system for /mnt/e/workspacce/AI/ai_kefu/.data/mysql/data/ is case insensitive
+2026-05-13T07:22:07.224332Z 0 [Warning] [MY-000054] [Server] World-writable config file '/mnt/e/workspacce/AI/ai_kefu/.data/mysql/data/auto.cnf' is ignored.
+2026-05-13T07:22:07.226081Z 0 [Warning] [MY-010107] [Server] World-writable config file '/mnt/e/workspacce/AI/ai_kefu/.data/mysql/data/auto.cnf' has been removed.
+2026-05-13T07:22:07.235985Z 0 [Warning] [MY-010075] [Server] No existing UUID has been found, so we assume that this is the first time that this server has been started. Generating a new UUID: 72c10238-4e9c-11f1-aa7b-bc091b5fe29f.
+2026-05-13T07:22:07.271101Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-05-13T07:22:08.365048Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-05-13T07:22:09.180439Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+2026-05-13T07:22:09.180886Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+2026-05-13T07:22:09.207058Z 0 [Warning] [MY-011810] [Server] Insecure configuration for --pid-file: Location '/tmp' in the path is accessible to all OS users. Consider choosing a different directory.
+2026-05-13T07:22:09.238364Z 7 [Warning] [MY-013360] [Server] Plugin mysql_native_password reported: ''mysql_native_password' is deprecated and will be removed in a future release. Please use caching_sha2_password instead'
+2026-05-13T07:22:09.253840Z 0 [System] [MY-010931] [Server] /mnt/e/environment/mysql-8.0.45/usr/sbin/mysqld: ready for connections. Version: '8.0.45-0ubuntu0.24.04.1'  socket: '/tmp/ai_kefu_mysql.sock'  port: 3306  (Ubuntu).
+2026-05-13T07:22:14.340018Z 10 [System] [MY-013172] [Server] Received SHUTDOWN from user root. Shutting down mysqld (Version: 8.0.45-0ubuntu0.24.04.1).
+2026-05-13T07:22:17.444858Z 0 [System] [MY-010910] [Server] /mnt/e/environment/mysql-8.0.45/usr/sbin/mysqld: Shutdown complete (mysqld 8.0.45-0ubuntu0.24.04.1)  (Ubuntu).
+2026-05-13T07:22:19.951494Z 0 [Warning] [MY-010097] [Server] Insecure configuration for --secure-file-priv: Current value does not restrict location of generated files. Consider setting it to a valid, non-empty path.
+2026-05-13T07:22:19.952839Z 0 [System] [MY-010116] [Server] /mnt/e/environment/mysql-8.0.45/usr/sbin/mysqld (mysqld 8.0.45-0ubuntu0.24.04.1) starting as process 8063
+2026-05-13T07:22:19.987087Z 0 [Warning] [MY-010159] [Server] Setting lower_case_table_names=2 because file system for /mnt/e/workspacce/AI/ai_kefu/.data/mysql/data/ is case insensitive
+2026-05-13T07:22:20.028757Z 0 [Warning] [MY-000054] [Server] World-writable config file '/mnt/e/workspacce/AI/ai_kefu/.data/mysql/data/auto.cnf' is ignored.
+2026-05-13T07:22:20.030895Z 0 [Warning] [MY-010107] [Server] World-writable config file '/mnt/e/workspacce/AI/ai_kefu/.data/mysql/data/auto.cnf' has been removed.
+2026-05-13T07:22:20.042421Z 0 [Warning] [MY-010075] [Server] No existing UUID has been found, so we assume that this is the first time that this server has been started. Generating a new UUID: 7a631acd-4e9c-11f1-85fd-bc091b5fe29f.
+2026-05-13T07:22:20.075170Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-05-13T07:22:21.173344Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-05-13T07:22:21.883353Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+2026-05-13T07:22:21.884189Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+2026-05-13T07:22:21.912645Z 0 [Warning] [MY-011810] [Server] Insecure configuration for --pid-file: Location '/tmp' in the path is accessible to all OS users. Consider choosing a different directory.
+2026-05-13T07:22:21.997776Z 0 [System] [MY-010931] [Server] /mnt/e/environment/mysql-8.0.45/usr/sbin/mysqld: ready for connections. Version: '8.0.45-0ubuntu0.24.04.1'  socket: '/tmp/ai_kefu_mysql.sock'  port: 3306  (Ubuntu).
+2026-05-13T07:22:25.045239Z 8 [Warning] [MY-013360] [Server] Plugin mysql_native_password reported: ''mysql_native_password' is deprecated and will be removed in a future release. Please use caching_sha2_password instead'
