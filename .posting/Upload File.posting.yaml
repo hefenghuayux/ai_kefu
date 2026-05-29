@@ -1,0 +1,8 @@
+name: Upload File
+description: 上传文件并准备 RAG 处理
+method: POST
+url: ${BASE_URL}/api/upload
+body:
+  form_data:
+  - name: user_id
+    value: '1'

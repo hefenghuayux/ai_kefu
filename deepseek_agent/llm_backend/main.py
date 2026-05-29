@@ -339,21 +339,20 @@ async def langgraph_query(
             logger.info("Using existing conversation state")
             # 如果有现有会话，使用resume命令继续对话
             async def process_stream():
-                async for c, metadata in graph.astream(
-                    Command(resume=query), 
-                    stream_mode="messages", 
-                    config=thread_config
-                ):
-                    # 只处理最终展示给用户的内容，跳过中间工具调用和内部状态
-                    if c.content and "research_plan" not in metadata.get("tags", []) and not c.additional_kwargs.get("tool_calls"):
-                        # 关键修改：使用json.dumps处理content，确保特殊字符如换行符被正确处理
-                        content_json = json.dumps(c.content, ensure_ascii=False)
+                try:
+                    result = await graph.ainvoke(
+                        Command(resume=query),
+                        config=thread_config
+                    )
+                    messages = result.get("messages", [])
+                    final_message = messages[-1].content if messages else ""
+                    if final_message:
+                        content_json = json.dumps(final_message, ensure_ascii=False)
                         yield f"data: {content_json}\n\n"
-                        
-                    # 工具调用单独处理，不发送给前端
-                    elif c.additional_kwargs.get("tool_calls"):
-                        tool_data = c.additional_kwargs.get("tool_calls")[0]["function"].get("arguments")
-                        logger.debug(f"Tool call: {tool_data}")
+                except Exception as e:
+                    logger.error(f"LangGraph stream error: {str(e)}", exc_info=True)
+                    error_json = json.dumps({"type": "error", "message": str(e)}, ensure_ascii=False)
+                    yield f"data: {error_json}\n\n"
                         
                 # 处理中断情况
                 state = graph.get_state(thread_config)
@@ -368,21 +367,20 @@ async def langgraph_query(
             
             # 流式处理查询
             async def process_stream():
-                async for c, metadata in graph.astream(
-                    input=input_state, 
-                    stream_mode="messages", 
-                    config=thread_config
-                ):
-                    # 只处理最终展示给用户的内容，跳过中间工具调用和内部状态
-                    if c.content and "research_plan" not in metadata.get("tags", []) and not c.additional_kwargs.get("tool_calls"):
-                        # 关键修改：使用json.dumps处理content，确保特殊字符如换行符被正确处理
-                        content_json = json.dumps(c.content, ensure_ascii=False)
+                try:
+                    result = await graph.ainvoke(
+                        input=input_state,
+                        config=thread_config
+                    )
+                    messages = result.get("messages", [])
+                    final_message = messages[-1].content if messages else ""
+                    if final_message:
+                        content_json = json.dumps(final_message, ensure_ascii=False)
                         yield f"data: {content_json}\n\n"
-                        
-                    # 工具调用单独处理，不发送给前端
-                    elif c.additional_kwargs.get("tool_calls"):
-                        tool_data = c.additional_kwargs.get("tool_calls")[0]["function"].get("arguments")
-                        logger.debug(f"Tool call: {tool_data}")
+                except Exception as e:
+                    logger.error(f"LangGraph stream error: {str(e)}", exc_info=True)
+                    error_json = json.dumps({"type": "error", "message": str(e)}, ensure_ascii=False)
+                    yield f"data: {error_json}\n\n"
                         
                 # 处理中断情况
                 state = graph.get_state(thread_config)

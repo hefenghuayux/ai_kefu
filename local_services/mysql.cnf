@@ -1,13 +1,9 @@
 [mysqld]
-basedir=/mnt/e/environment/mysql-8.0.45/usr
-datadir=/mnt/e/workspacce/AI/ai_kefu/.data/mysql/data
-plugin-dir=/mnt/e/environment/mysql-8.0.45/usr/lib/mysql/plugin
-lc-messages-dir=/mnt/e/environment/mysql-8.0.45/usr/share/mysql
+basedir=E:/environment/mysql-8.0.46-winx64-bin
+datadir=E:/workspacce/AI/ai_kefu/.data/mysql-win/data
 port=3306
 bind-address=127.0.0.1
-socket=/tmp/ai_kefu_mysql.sock
-pid-file=/tmp/ai_kefu_mysql.pid
-log-error=/mnt/e/workspacce/AI/ai_kefu/.data/logs/mysql.err
+log-error=E:/workspacce/AI/ai_kefu/.data/logs/mysql.err
 character-set-server=utf8mb4
 collation-server=utf8mb4_unicode_ci
 secure-file-priv=
@@ -17,5 +13,4 @@ mysqlx=0
 [client]
 host=127.0.0.1
 port=3306
-socket=/tmp/ai_kefu_mysql.sock
 default-character-set=utf8mb4

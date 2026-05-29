@@ -1,8 +1,11 @@
 from typing import Union
-from app.core.config import settings, ServiceType
+
+from app.core.config import ServiceType, settings
 from app.services.deepseek_service import DeepseekService
 from app.services.ollama_service import OllamaService
 from app.services.search_service import SearchService
+
+
 class LLMFactory:
     @staticmethod
     def create_chat_service():
@@ -12,7 +15,7 @@ class LLMFactory:
             return DeepseekService()
         else:
             # 否则使用OllamaService
-            return OllamaService()
+            return OllamaService(model=settings.OLLAMA_CHAT_MODEL)
 
     @staticmethod
     def create_reasoner_service():
@@ -22,7 +25,7 @@ class LLMFactory:
             return DeepseekService()
         else:
             # 否则使用OllamaService
-            return OllamaService()
+            return OllamaService(model=settings.OLLAMA_REASON_MODEL)
     
     @staticmethod
     def create_search_service():

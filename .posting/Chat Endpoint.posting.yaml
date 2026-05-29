@@ -1,0 +1,16 @@
+name: Chat Endpoint
+description: 聊天接口
+method: POST
+url: ${BASE_URL}/api/chat
+body:
+  content: |-
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "你好，请简单介绍一下你能做什么。"
+        }
+      ],
+      "user_id": 1,
+      "conversation_id": 1
+    }

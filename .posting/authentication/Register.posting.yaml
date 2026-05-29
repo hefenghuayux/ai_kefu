@@ -1,0 +1,10 @@
+name: Register
+method: POST
+url: ${BASE_URL}/api/register
+body:
+  content: |-
+    {
+      "username": "${TEST_USERNAME}",
+      "email": "${TEST_EMAIL}",
+      "password": "${TEST_PASSWORD}"
+    }

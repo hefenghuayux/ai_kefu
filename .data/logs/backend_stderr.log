@@ -1,0 +1,218 @@
+E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\langgraph\checkpoint\base\__init__.py:18: LangChainPendingDeprecationWarning: The default value of `allowed_objects` will change in a future version. Pass an explicit value (e.g., allowed_objects='messages' or allowed_objects='core') to suppress this warning.
+  from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
+ERROR:    Exception in ASGI application
+  + Exception Group Traceback (most recent call last):
+  |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\_utils.py", line 81, in collapse_excgroups
+  |     yield
+  |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\responses.py", line 274, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\anyio\_backends\_asyncio.py", line 799, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\uvicorn\protocols\http\h11_impl.py", line 415, in run_asgi
+    |     result = await app(  # type: ignore[func-returns-value]
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 56, in __call__
+    |     return await self.app(scope, receive, send)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\fastapi\applications.py", line 1159, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\applications.py", line 90, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    |     raise exc
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\middleware\cors.py", line 88, in __call__
+    |     await self.app(scope, receive, send)
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\middleware\base.py", line 198, in __call__
+    |     raise app_exc
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    |     await self.app(scope, receive, send)
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\routing.py", line 660, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\routing.py", line 680, in app
+    |     await route.handle(scope, receive, send)
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\routing.py", line 276, in handle
+    |     await self.app(scope, receive, send)
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\fastapi\routing.py", line 134, in app
+    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\fastapi\routing.py", line 121, in app
+    |     await response(scope, receive, send)
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\responses.py", line 273, in __call__
+    |     with collapse_excgroups():
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\contextlib.py", line 158, in __exit__
+    |     self.gen.throw(typ, value, traceback)
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\_utils.py", line 87, in collapse_excgroups
+    |     raise exc
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\responses.py", line 277, in wrap
+    |     await func()
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\responses.py", line 250, in stream_response
+    |     async for chunk in self.body_iterator:
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\llm_backend\main.py", line 371, in process_stream
+    |     async for c, metadata in graph.astream(
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\langgraph\pregel\__init__.py", line 2626, in astream
+    |     async for _ in runner.atick(
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\langgraph\pregel\runner.py", line 397, in atick
+    |     _panic_or_proceed(
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\langgraph\pregel\runner.py", line 504, in _panic_or_proceed
+    |     raise exc
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\langgraph\pregel\retry.py", line 128, in arun_with_retry
+    |     return await task.proc.ainvoke(task.input, config)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\langgraph\utils\runnable.py", line 643, in ainvoke
+    |     input = await step.ainvoke(input, config, **kwargs)
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\langgraph\utils\runnable.py", line 431, in ainvoke
+    |     ret = await asyncio.create_task(coro, context=context)
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "E:\workspacce\AI\ai_kefu\deepseek_agent\llm_backend\app\lg_agent\lg_builder.py", line 441, in create_research_plan
+    |     graph=neo4j_graph,
+    |           ^^^^^^^^^^^
+    | UnboundLocalError: cannot access local variable 'neo4j_graph' where it is not associated with a value
+    | During task with name 'create_research_plan' and id '2fa3d25d-d705-e9e4-12b6-26c5e9ae747d'
+    +------------------------------------
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\uvicorn\protocols\http\h11_impl.py", line 415, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 56, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\fastapi\applications.py", line 1159, in __call__
+    await super().__call__(scope, receive, send)
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    raise exc
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\middleware\cors.py", line 88, in __call__
+    await self.app(scope, receive, send)
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\middleware\base.py", line 198, in __call__
+    raise app_exc
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\routing.py", line 680, in app
+    await route.handle(scope, receive, send)
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\fastapi\routing.py", line 134, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\fastapi\routing.py", line 121, in app
+    await response(scope, receive, send)
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\responses.py", line 273, in __call__
+    with collapse_excgroups():
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\_utils.py", line 87, in collapse_excgroups
+    raise exc
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\responses.py", line 277, in wrap
+    await func()
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\responses.py", line 250, in stream_response
+    async for chunk in self.body_iterator:
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\llm_backend\main.py", line 371, in process_stream
+    async for c, metadata in graph.astream(
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\langgraph\pregel\__init__.py", line 2626, in astream
+    async for _ in runner.atick(
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\langgraph\pregel\runner.py", line 397, in atick
+    _panic_or_proceed(
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\langgraph\pregel\runner.py", line 504, in _panic_or_proceed
+    raise exc
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\langgraph\pregel\retry.py", line 128, in arun_with_retry
+    return await task.proc.ainvoke(task.input, config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\langgraph\utils\runnable.py", line 643, in ainvoke
+    input = await step.ainvoke(input, config, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\langgraph\utils\runnable.py", line 431, in ainvoke
+    ret = await asyncio.create_task(coro, context=context)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\llm_backend\app\lg_agent\lg_builder.py", line 441, in create_research_plan
+    graph=neo4j_graph,
+          ^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'neo4j_graph' where it is not associated with a value
+During task with name 'create_research_plan' and id '2fa3d25d-d705-e9e4-12b6-26c5e9ae747d'
+Exception terminating connection <AdaptedConnection <aiomysql.connection.Connection object at 0x00000222992F6C50>>
+Traceback (most recent call last):
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 373, in _close_connection
+    self._dialect.do_terminate(connection)
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\sqlalchemy\dialects\mysql\aiomysql.py", line 218, in do_terminate
+    dbapi_connection.terminate()
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\sqlalchemy\connectors\asyncio.py", line 402, in terminate
+    self.await_(asyncio.shield(self._terminate_graceful_close()))  # type: ignore[attr-defined] # noqa: E501
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+asyncio.exceptions.CancelledError: Cancelled via cancel scope 2229932c790 by <Task pending name='starlette.middleware.base.BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.coro' coro=<BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.coro() running at E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\starlette\middleware\base.py:144> cb=[TaskGroup._spawn.<locals>.task_done() at E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\anyio\_backends\_asyncio.py:821]>
+--- Logging error in Loguru Handler #1 ---
+Record was: {'elapsed': datetime.timedelta(seconds=1180, microseconds=764938), 'exception': None, 'extra': {'service': 'search'}, 'file': (name='search_service.py', path='E:\\workspacce\\AI\\ai_kefu\\deepseek_agent\\llm_backend\\app\\services\\search_service.py'), 'function': '_call_with_tool', 'level': (name='INFO', no=20, icon='\u2139\ufe0f'), 'line': 83, 'message': "Model response: Choice(finish_reason='stop', index=0, logprobs=None, message=ChatCompletionMessage(content='看起来您输入的内容在显示上可能有些乱码或格式问题。我理解您想问的是关于 **SerpAPI** 和 **OpenAI** 的相关内容。\\n\\n请问您具体想要了解什么？比如：\\n\\n1. **SerpAPI 是什么？**  \\n   SerpAPI 是一个提供搜索引擎结果 API 的服务，可以获取 Google、Bing、Yahoo 等搜索引擎的实时搜索结果，常用于爬虫、数据分析、SEO 等场景。\\n\\n2. **OpenAI 是什么？**  \\n   OpenAI 是开发 ChatGPT、GPT-4 等大语言模型的公司，提供 AI 对话、文本生成、代码编写等功能。\\n\\n3. **SerpAPI 和 OpenAI 如何结合使用？**  \\n   您可以用 SerpAPI 获取实时网络数据，再结合 OpenAI 的模型（如 GPT-4）对搜索结果进行分析、总结或生成回答。\\n\\n请告诉我您具体想了解什么，我来为您详细解答！\U0001f60a', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=None))", 'module': 'search_service', 'name': 'app.services.search_service', 'process': (id=31748, name='MainProcess'), 'thread': (id=2272, name='MainThread'), 'time': datetime(2026, 5, 27, 18, 7, 57, 363477, tzinfo=datetime.timezone(datetime.timedelta(seconds=28800), '中国标准时间'))}
+Traceback (most recent call last):
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\loguru\_handler.py", line 206, in emit
+    self._sink.write(str_record)
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\loguru\_simple_sinks.py", line 16, in write
+    self._stream.write(message)
+UnicodeEncodeError: 'gbk' codec can't encode character '\U0001f60a' in position 610: illegal multibyte sequence
+--- End of logging error ---
+--- Logging error in Loguru Handler #1 ---
+Record was: {'elapsed': datetime.timedelta(seconds=1180, microseconds=800884), 'exception': None, 'extra': {'service': 'search'}, 'file': (name='search_service.py', path='E:\\workspacce\\AI\\ai_kefu\\deepseek_agent\\llm_backend\\app\\services\\search_service.py'), 'function': 'generate_stream', 'level': (name='INFO', no=20, icon='\u2139\ufe0f'), 'line': 117, 'message': "Tool call response: Choice(finish_reason='stop', index=0, logprobs=None, message=ChatCompletionMessage(content='看起来您输入的内容在显示上可能有些乱码或格式问题。我理解您想问的是关于 **SerpAPI** 和 **OpenAI** 的相关内容。\\n\\n请问您具体想要了解什么？比如：\\n\\n1. **SerpAPI 是什么？**  \\n   SerpAPI 是一个提供搜索引擎结果 API 的服务，可以获取 Google、Bing、Yahoo 等搜索引擎的实时搜索结果，常用于爬虫、数据分析、SEO 等场景。\\n\\n2. **OpenAI 是什么？**  \\n   OpenAI 是开发 ChatGPT、GPT-4 等大语言模型的公司，提供 AI 对话、文本生成、代码编写等功能。\\n\\n3. **SerpAPI 和 OpenAI 如何结合使用？**  \\n   您可以用 SerpAPI 获取实时网络数据，再结合 OpenAI 的模型（如 GPT-4）对搜索结果进行分析、总结或生成回答。\\n\\n请告诉我您具体想了解什么，我来为您详细解答！\U0001f60a', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=None))", 'module': 'search_service', 'name': 'app.services.search_service', 'process': (id=31748, name='MainProcess'), 'thread': (id=2272, name='MainThread'), 'time': datetime(2026, 5, 27, 18, 7, 57, 399423, tzinfo=datetime.timezone(datetime.timedelta(seconds=28800), '中国标准时间'))}
+Traceback (most recent call last):
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\loguru\_handler.py", line 206, in emit
+    self._sink.write(str_record)
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\loguru\_simple_sinks.py", line 16, in write
+    self._stream.write(message)
+UnicodeEncodeError: 'gbk' codec can't encode character '\U0001f60a' in position 615: illegal multibyte sequence
+--- End of logging error ---
+--- Logging error in Loguru Handler #1 ---
+Record was: {'elapsed': datetime.timedelta(seconds=1208, microseconds=305443), 'exception': None, 'extra': {'service': 'search'}, 'file': (name='search_service.py', path='E:\\workspacce\\AI\\ai_kefu\\deepseek_agent\\llm_backend\\app\\services\\search_service.py'), 'function': '_call_with_tool', 'level': (name='INFO', no=20, icon='\u2139\ufe0f'), 'line': 83, 'message': "Model response: Choice(finish_reason='stop', index=0, logprobs=None, message=ChatCompletionMessage(content='您好！看起来您发送的消息出现了一些乱码。\U0001f605 请问您想了解关于OpenAI的什么信息呢？比如：\\n\\n- **OpenAI的最新动态或新闻**\\n- **OpenAI的产品（如ChatGPT、GPT-4、DALL-E等）**\\n- **OpenAI的公司背景、创始人信息**\\n- **其他具体问题**\\n\\n请重新输入您的问题，我很乐意为您提供帮助！\U0001f60a', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=None))", 'module': 'search_service', 'name': 'app.services.search_service', 'process': (id=31748, name='MainProcess'), 'thread': (id=2272, name='MainThread'), 'time': datetime(2026, 5, 27, 18, 8, 24, 903982, tzinfo=datetime.timezone(datetime.timedelta(seconds=28800), '中国标准时间'))}
+Traceback (most recent call last):
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\loguru\_handler.py", line 206, in emit
+    self._sink.write(str_record)
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\loguru\_simple_sinks.py", line 16, in write
+    self._stream.write(message)
+UnicodeEncodeError: 'gbk' codec can't encode character '\U0001f605' in position 214: illegal multibyte sequence
+--- End of logging error ---
+--- Logging error in Loguru Handler #1 ---
+Record was: {'elapsed': datetime.timedelta(seconds=1208, microseconds=320305), 'exception': None, 'extra': {'service': 'search'}, 'file': (name='search_service.py', path='E:\\workspacce\\AI\\ai_kefu\\deepseek_agent\\llm_backend\\app\\services\\search_service.py'), 'function': 'generate_stream', 'level': (name='INFO', no=20, icon='\u2139\ufe0f'), 'line': 117, 'message': "Tool call response: Choice(finish_reason='stop', index=0, logprobs=None, message=ChatCompletionMessage(content='您好！看起来您发送的消息出现了一些乱码。\U0001f605 请问您想了解关于OpenAI的什么信息呢？比如：\\n\\n- **OpenAI的最新动态或新闻**\\n- **OpenAI的产品（如ChatGPT、GPT-4、DALL-E等）**\\n- **OpenAI的公司背景、创始人信息**\\n- **其他具体问题**\\n\\n请重新输入您的问题，我很乐意为您提供帮助！\U0001f60a', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=None))", 'module': 'search_service', 'name': 'app.services.search_service', 'process': (id=31748, name='MainProcess'), 'thread': (id=2272, name='MainThread'), 'time': datetime(2026, 5, 27, 18, 8, 24, 918844, tzinfo=datetime.timezone(datetime.timedelta(seconds=28800), '中国标准时间'))}
+Traceback (most recent call last):
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\loguru\_handler.py", line 206, in emit
+    self._sink.write(str_record)
+  File "E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\loguru\_simple_sinks.py", line 16, in write
+    self._stream.write(message)
+UnicodeEncodeError: 'gbk' codec can't encode character '\U0001f605' in position 219: illegal multibyte sequence
+--- End of logging error ---

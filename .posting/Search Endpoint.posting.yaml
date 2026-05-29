@@ -1,0 +1,16 @@
+name: Search Endpoint
+description: 带搜索功能的聊天接口
+method: POST
+url: ${BASE_URL}/api/search
+body:
+  content: |-
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "请搜索并总结一下这个问题的相关信息。"
+        }
+      ],
+      "user_id": 1,
+      "conversation_id": 1
+    }

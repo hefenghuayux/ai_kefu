@@ -2,7 +2,8 @@ import uvicorn
 from app.core.logger import get_logger
 import os
 from pathlib import Path
-
+#powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\start_project.ps1
+#$env:PYTHONUTF8="1"; posting -c .\.posting -e .\.posting\.env
 logger = get_logger(service="server")
 
 def start_server():

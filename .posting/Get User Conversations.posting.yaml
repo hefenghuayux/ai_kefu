@@ -1,0 +1,6 @@
+name: Get User Conversations
+description: 获取用户的所有会话
+url: ${BASE_URL}/api/conversations/user/{user_id}
+path_params:
+- name: user_id
+  value: '1'

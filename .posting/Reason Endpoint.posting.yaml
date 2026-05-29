@@ -1,0 +1,15 @@
+name: Reason Endpoint
+description: 推理接口
+method: POST
+url: ${BASE_URL}/api/reason
+body:
+  content: |-
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "如果一个商品原价 100 元，先打八折再满减 10 元，最终价格是多少？请说明推理过程。"
+        }
+      ],
+      "user_id": 1
+    }

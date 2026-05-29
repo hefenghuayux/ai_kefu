@@ -1,0 +1,7 @@
+name: Delete Conversation
+description: 删除会话及其所有消息
+method: DELETE
+url: ${BASE_URL}/api/conversations/{conversation_id}
+path_params:
+- name: conversation_id
+  value: '1'

@@ -29,7 +29,8 @@ def get_neo4j_graph() -> Neo4jGraph:
             url=settings.NEO4J_URL,
             username=settings.NEO4J_USERNAME,
             password=settings.NEO4J_PASSWORD,
-            database=settings.NEO4J_DATABASE
+            database=settings.NEO4J_DATABASE,
+            refresh_schema=False
         )
         return neo4j_graph
     except Exception as e:

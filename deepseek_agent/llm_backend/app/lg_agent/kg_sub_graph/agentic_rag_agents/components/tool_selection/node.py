@@ -11,12 +11,13 @@ A tool_selection node must
 * send the validated parameters to the appropriate tool node
 """
 
-from typing import Any, Callable, Coroutine, Dict, List, Literal, Set
+from typing import Any, Callable, Coroutine, Dict, List, Literal
 from langchain_core.language_models import BaseChatModel
 from langchain_core.output_parsers import PydanticToolsParser
 from langchain_core.runnables.base import Runnable
 from langgraph.types import Command, Send
 from pydantic import BaseModel
+from app.core.logger import get_logger
 
 
 from app.lg_agent.kg_sub_graph.agentic_rag_agents.components.state import ToolSelectionInputState
@@ -24,6 +25,7 @@ from app.lg_agent.kg_sub_graph.agentic_rag_agents.components.tool_selection.prom
 
 # 定义工具选择提示词
 tool_selection_prompt = create_tool_selection_prompt_template()
+logger = get_logger(service="tool_selection_node")
 
 
 # 声明式的使用可配置模型：https://python.langchain.com/docs/how_to/chat_models_universal_init/#using-a-configurable-model-declaratively
@@ -57,12 +59,6 @@ def create_tool_selection_node(
         | PydanticToolsParser(tools=tool_schemas, first_tool_only=True)
     )
 
-    # 从传入的tool_schemas列表中，获取每个工具的title属性，创建出一个工具名称集合。
-    predefined_cypher_tools: Set[str] = {
-        t.model_json_schema().get("title", "") for t in tool_schemas
-    }
-
-
     # async def tool_selection(
     #     state: ToolSelectionInputState,
     # ) -> Command[Literal["text2cypher", "predefined_cypher", "customer_tools"]]:
@@ -72,10 +68,14 @@ def create_tool_selection_node(
         """
         Choose the appropriate tool for the given task.
         """
-        # 调用工具选择链，生成针对每个任务要调用的工具名称和参数
-        tool_selection_output: BaseModel = await tool_selection_chain.ainvoke(
-            {"question": state.get("question", "")}
-        )
+        try:
+            # 调用工具选择链，生成针对每个任务要调用的工具名称和参数
+            tool_selection_output: BaseModel = await tool_selection_chain.ainvoke(
+                {"question": state.get("question", "")}
+            )
+        except Exception as e:
+            logger.error(f"Tool selection failed: {str(e)}", exc_info=True)
+            raise
 
         # 根据路由到对应的工具节点
         if tool_selection_output is not None:
@@ -123,7 +123,18 @@ def create_tool_selection_node(
            
                 
         elif default_to_text2cypher:
-            return go_to_text2cypher
+            question = state.get("question", "")
+            return Command(
+                goto=Send(
+                    "cypher_query",
+                    {
+                        "task": question,
+                        "query_name": "cypher_query",
+                        "query_parameters": {"task": question},
+                        "steps": ["tool_selection"],
+                    },
+                )
+            )
 
         # handle instance where no tool is chosen
         else:
@@ -139,7 +150,5 @@ def create_tool_selection_node(
                     },
                 )
             )
-
-        return go_to_text2cypher
 
     return tool_selection

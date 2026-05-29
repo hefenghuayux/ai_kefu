@@ -7,11 +7,12 @@ from app.core.logger import get_logger
 logger = get_logger(service="ollama")
 
 class OllamaService:
-    def __init__(self):
+    def __init__(self, model: Optional[str] = None):
         logger.info("Initializing Ollama Service")
         self.base_url = settings.OLLAMA_BASE_URL
         self.chat_model = settings.OLLAMA_CHAT_MODEL
         self.reason_model = settings.OLLAMA_REASON_MODEL
+        self.model = model or self.chat_model
 
     async def generate_stream(
         self, 
@@ -23,7 +24,7 @@ class OllamaService:
         """流式生成回复"""
         try:
             # 根据不同的用途使用不同的模型
-            model = self.reason_model
+            model = self.model
             logger.info(f"Using model: {model}")
             
             full_response = []

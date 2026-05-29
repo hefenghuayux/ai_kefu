@@ -1,0 +1,9 @@
+name: Login
+method: POST
+url: ${BASE_URL}/api/token
+body:
+  content: |-
+    {
+      "email": "${TEST_EMAIL}",
+      "password": "${TEST_PASSWORD}"
+    }

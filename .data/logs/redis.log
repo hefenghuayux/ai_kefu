@@ -1,0 +1,126 @@
+11:C 13 May 2026 17:25:10.752 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+11:C 13 May 2026 17:25:10.760 * Redis version=7.4.9, bits=64, commit=00000000, modified=0, pid=11, just started
+11:C 13 May 2026 17:25:10.770 * Configuration loaded
+11:M 13 May 2026 17:25:10.779 # You requested maxclients of 10000 requiring at least 10032 max file descriptors.
+11:M 13 May 2026 17:25:10.787 # Server can't set maximum open files to 10032 because of OS error: Operation not permitted.
+11:M 13 May 2026 17:25:10.794 # Current maximum open files is 3200. maxclients has been reduced to 3168 to compensate for low ulimit. If you need higher maxclients increase 'ulimit -n'.
+11:M 13 May 2026 17:25:10.801 * monotonic clock: POSIX clock_gettime
+11:M 13 May 2026 17:25:10.810 * Running mode=standalone, port=6379.
+11:M 13 May 2026 17:25:10.820 * Server initialized
+11:M 13 May 2026 17:25:10.835 * Creating AOF base file appendonly.aof.1.base.rdb on server start
+11:M 13 May 2026 17:25:10.847 * Creating AOF incr file appendonly.aof.1.incr.aof on server start
+11:M 13 May 2026 17:25:10.858 * Ready to accept connections tcp
+474:C 19 May 2026 16:18:09.391 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+474:C 19 May 2026 16:18:09.400 * Redis version=7.4.9, bits=64, commit=00000000, modified=0, pid=474, just started
+474:C 19 May 2026 16:18:09.407 * Configuration loaded
+474:M 19 May 2026 16:18:09.415 # You requested maxclients of 10000 requiring at least 10032 max file descriptors.
+474:M 19 May 2026 16:18:09.423 # Server can't set maximum open files to 10032 because of OS error: Operation not permitted.
+474:M 19 May 2026 16:18:09.432 # Current maximum open files is 3200. maxclients has been reduced to 3168 to compensate for low ulimit. If you need higher maxclients increase 'ulimit -n'.
+474:M 19 May 2026 16:18:09.442 * monotonic clock: POSIX clock_gettime
+474:M 19 May 2026 16:18:09.454 * Running mode=standalone, port=6379.
+474:M 19 May 2026 16:18:09.463 * Server initialized
+474:M 19 May 2026 16:18:09.471 * Reading RDB base file on AOF loading...
+474:M 19 May 2026 16:18:09.480 * Loading RDB produced by version 7.4.9
+474:M 19 May 2026 16:18:09.490 * RDB age 514379 seconds
+474:M 19 May 2026 16:18:09.501 * RDB memory usage when created 0.55 Mb
+474:M 19 May 2026 16:18:09.510 * RDB is base AOF
+474:M 19 May 2026 16:18:09.518 * Done loading RDB, keys loaded: 0, keys expired: 0.
+474:M 19 May 2026 16:18:09.527 * DB loaded from base file appendonly.aof.1.base.rdb: 0.055 seconds
+474:M 19 May 2026 16:18:09.539 * DB loaded from append only file: 0.065 seconds
+474:M 19 May 2026 16:18:09.552 * Opening AOF incr file appendonly.aof.1.incr.aof on server start
+474:M 19 May 2026 16:18:09.569 * Ready to accept connections tcp
+2031:C 19 May 2026 16:23:55.916 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+2031:C 19 May 2026 16:23:55.929 * Redis version=7.4.9, bits=64, commit=00000000, modified=0, pid=2031, just started
+2031:C 19 May 2026 16:23:55.940 * Configuration loaded
+2031:M 19 May 2026 16:23:55.951 # You requested maxclients of 10000 requiring at least 10032 max file descriptors.
+2031:M 19 May 2026 16:23:55.962 # Server can't set maximum open files to 10032 because of OS error: Operation not permitted.
+2031:M 19 May 2026 16:23:55.975 # Current maximum open files is 3200. maxclients has been reduced to 3168 to compensate for low ulimit. If you need higher maxclients increase 'ulimit -n'.
+2031:M 19 May 2026 16:23:55.989 * monotonic clock: POSIX clock_gettime
+2031:M 19 May 2026 16:23:56.005 * Running mode=standalone, port=6379.
+2031:M 19 May 2026 16:23:56.018 * Server initialized
+2031:M 19 May 2026 16:23:56.029 * Reading RDB base file on AOF loading...
+2031:M 19 May 2026 16:23:56.039 * Loading RDB produced by version 7.4.9
+2031:M 19 May 2026 16:23:56.056 * RDB age 514726 seconds
+2031:M 19 May 2026 16:23:56.066 * RDB memory usage when created 0.55 Mb
+2031:M 19 May 2026 16:23:56.078 * RDB is base AOF
+2031:M 19 May 2026 16:23:56.092 * Done loading RDB, keys loaded: 0, keys expired: 0.
+2031:M 19 May 2026 16:23:56.103 * DB loaded from base file appendonly.aof.1.base.rdb: 0.072 seconds
+2031:M 19 May 2026 16:23:56.130 * DB loaded from append only file: 0.097 seconds
+2031:M 19 May 2026 16:23:56.142 * Opening AOF incr file appendonly.aof.1.incr.aof on server start
+2031:M 19 May 2026 16:23:56.157 * Ready to accept connections tcp
+824:C 19 May 2026 16:29:24.917 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+824:C 19 May 2026 16:29:24.928 * Redis version=7.4.9, bits=64, commit=00000000, modified=0, pid=824, just started
+824:C 19 May 2026 16:29:24.935 * Configuration loaded
+824:M 19 May 2026 16:29:24.944 # You requested maxclients of 10000 requiring at least 10032 max file descriptors.
+824:M 19 May 2026 16:29:24.951 # Server can't set maximum open files to 10032 because of OS error: Operation not permitted.
+824:M 19 May 2026 16:29:24.959 # Current maximum open files is 3200. maxclients has been reduced to 3168 to compensate for low ulimit. If you need higher maxclients increase 'ulimit -n'.
+824:M 19 May 2026 16:29:24.966 * monotonic clock: POSIX clock_gettime
+824:M 19 May 2026 16:29:24.973 * Running mode=standalone, port=6379.
+824:M 19 May 2026 16:29:24.982 * Server initialized
+824:M 19 May 2026 16:29:24.990 * Reading RDB base file on AOF loading...
+824:M 19 May 2026 16:29:24.997 * Loading RDB produced by version 7.4.9
+824:M 19 May 2026 16:29:25.006 * RDB age 515054 seconds
+824:M 19 May 2026 16:29:25.015 * RDB memory usage when created 0.55 Mb
+824:M 19 May 2026 16:29:25.022 * RDB is base AOF
+824:M 19 May 2026 16:29:25.030 * Done loading RDB, keys loaded: 0, keys expired: 0.
+824:M 19 May 2026 16:29:25.038 * DB loaded from base file appendonly.aof.1.base.rdb: 0.047 seconds
+824:M 19 May 2026 16:29:25.046 * DB loaded from append only file: 0.056 seconds
+824:M 19 May 2026 16:29:25.054 * Opening AOF incr file appendonly.aof.1.incr.aof on server start
+824:M 19 May 2026 16:29:25.062 * Ready to accept connections tcp
+599:C 27 May 2026 16:44:22.341 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+599:C 27 May 2026 16:44:22.352 * Redis version=7.4.9, bits=64, commit=00000000, modified=0, pid=599, just started
+599:C 27 May 2026 16:44:22.362 * Configuration loaded
+599:M 27 May 2026 16:44:22.372 # You requested maxclients of 10000 requiring at least 10032 max file descriptors.
+599:M 27 May 2026 16:44:22.383 # Server can't set maximum open files to 10032 because of OS error: Operation not permitted.
+599:M 27 May 2026 16:44:22.392 # Current maximum open files is 3200. maxclients has been reduced to 3168 to compensate for low ulimit. If you need higher maxclients increase 'ulimit -n'.
+599:M 27 May 2026 16:44:22.404 * monotonic clock: POSIX clock_gettime
+599:M 27 May 2026 16:44:22.417 * Running mode=standalone, port=6379.
+599:M 27 May 2026 16:44:22.433 * Server initialized
+599:M 27 May 2026 16:44:22.444 * Reading RDB base file on AOF loading...
+599:M 27 May 2026 16:44:22.457 * Loading RDB produced by version 7.4.9
+599:M 27 May 2026 16:44:22.469 * RDB age 1207152 seconds
+599:M 27 May 2026 16:44:22.480 * RDB memory usage when created 0.55 Mb
+599:M 27 May 2026 16:44:22.490 * RDB is base AOF
+599:M 27 May 2026 16:44:22.501 * Done loading RDB, keys loaded: 0, keys expired: 0.
+599:M 27 May 2026 16:44:22.512 * DB loaded from base file appendonly.aof.1.base.rdb: 0.067 seconds
+599:M 27 May 2026 16:44:22.524 * DB loaded from append only file: 0.079 seconds
+599:M 27 May 2026 16:44:22.536 * Opening AOF incr file appendonly.aof.1.incr.aof on server start
+599:M 27 May 2026 16:44:22.548 * Ready to accept connections tcp
+507:C 28 May 2026 15:57:44.895 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+507:C 28 May 2026 15:57:44.909 * Redis version=7.4.9, bits=64, commit=00000000, modified=0, pid=507, just started
+507:C 28 May 2026 15:57:44.922 * Configuration loaded
+507:M 28 May 2026 15:57:44.931 # You requested maxclients of 10000 requiring at least 10032 max file descriptors.
+507:M 28 May 2026 15:57:44.941 # Server can't set maximum open files to 10032 because of OS error: Operation not permitted.
+507:M 28 May 2026 15:57:44.949 # Current maximum open files is 3200. maxclients has been reduced to 3168 to compensate for low ulimit. If you need higher maxclients increase 'ulimit -n'.
+507:M 28 May 2026 15:57:44.959 * monotonic clock: POSIX clock_gettime
+507:M 28 May 2026 15:57:44.968 * Running mode=standalone, port=6379.
+507:M 28 May 2026 15:57:44.979 * Server initialized
+507:M 28 May 2026 15:57:44.996 * Reading RDB base file on AOF loading...
+507:M 28 May 2026 15:57:45.006 * Loading RDB produced by version 7.4.9
+507:M 28 May 2026 15:57:45.015 * RDB age 1290755 seconds
+507:M 28 May 2026 15:57:45.023 * RDB memory usage when created 0.55 Mb
+507:M 28 May 2026 15:57:45.031 * RDB is base AOF
+507:M 28 May 2026 15:57:45.040 * Done loading RDB, keys loaded: 0, keys expired: 0.
+507:M 28 May 2026 15:57:45.048 * DB loaded from base file appendonly.aof.1.base.rdb: 0.045 seconds
+507:M 28 May 2026 15:57:45.056 * DB loaded from append only file: 0.061 seconds
+507:M 28 May 2026 15:57:45.064 * Opening AOF incr file appendonly.aof.1.incr.aof on server start
+507:M 28 May 2026 15:57:45.072 * Ready to accept connections tcp
+114:C 29 May 2026 10:28:09.411 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+114:C 29 May 2026 10:28:09.422 * Redis version=7.4.9, bits=64, commit=00000000, modified=0, pid=114, just started
+114:C 29 May 2026 10:28:09.434 * Configuration loaded
+114:M 29 May 2026 10:28:09.446 # You requested maxclients of 10000 requiring at least 10032 max file descriptors.
+114:M 29 May 2026 10:28:09.458 # Server can't set maximum open files to 10032 because of OS error: Operation not permitted.
+114:M 29 May 2026 10:28:09.468 # Current maximum open files is 3200. maxclients has been reduced to 3168 to compensate for low ulimit. If you need higher maxclients increase 'ulimit -n'.
+114:M 29 May 2026 10:28:09.482 * monotonic clock: POSIX clock_gettime
+114:M 29 May 2026 10:28:09.496 * Running mode=standalone, port=6379.
+114:M 29 May 2026 10:28:09.504 * Server initialized
+114:M 29 May 2026 10:28:09.522 * Reading RDB base file on AOF loading...
+114:M 29 May 2026 10:28:09.535 * Loading RDB produced by version 7.4.9
+114:M 29 May 2026 10:28:09.546 * RDB age 1357379 seconds
+114:M 29 May 2026 10:28:09.556 * RDB memory usage when created 0.55 Mb
+114:M 29 May 2026 10:28:09.567 * RDB is base AOF
+114:M 29 May 2026 10:28:09.576 * Done loading RDB, keys loaded: 0, keys expired: 0.
+114:M 29 May 2026 10:28:09.590 * DB loaded from base file appendonly.aof.1.base.rdb: 0.055 seconds
+114:M 29 May 2026 10:28:09.607 * DB loaded from append only file: 0.077 seconds
+114:M 29 May 2026 10:28:09.623 * Opening AOF incr file appendonly.aof.1.incr.aof on server start
+114:M 29 May 2026 10:28:09.639 * Ready to accept connections tcp

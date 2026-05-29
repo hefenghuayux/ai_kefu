@@ -1,0 +1,105 @@
+
+2026-05-27 17:49:02.944 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:10630 - "GET /health HTTP/1.1" 200 - 0.00s
+2026-05-27 17:49:29.249 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:7168 - "GET /health HTTP/1.1" 200 - 0.00s
+2026-05-27 17:49:30.388 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:7175 - "POST /api/register HTTP/1.1" 200 - 0.35s
+2026-05-27 17:50:06.933 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:14760 - "GET /register HTTP/1.1" 404 - 0.01s
+2026-05-27 17:50:56.708 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:8221 - "POST /api/register HTTP/1.1" 200 - 0.27s
+2026-05-27 17:51:12.496 | WARNING  | app.services.user_service:authenticate_user:58 - Invalid password for user: test_454353@example.com
+2026-05-27 17:51:12.512 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:8273 - "POST /api/token HTTP/1.1" 401 - 0.28s
+2026-05-27 17:54:26.065 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:2445 - "POST /api/token HTTP/1.1" 200 - 0.30s
+2026-05-27 17:56:43.777 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:12474 - "POST /api/register HTTP/1.1" 200 - 0.55s
+2026-05-27 17:56:47.596 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:12504 - "GET /health HTTP/1.1" 200 - 0.00s
+2026-05-27 17:56:54.101 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:11913 - "POST /api/token HTTP/1.1" 200 - 0.27s
+2026-05-27 17:56:54.132 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:11913 - "GET /api/users/me HTTP/1.1" 200 - 0.01s
+2026-05-27 17:56:54.196 | INFO     | app.services.conversation_service:create_conversation:32 - Created new conversation 1 for user 3
+2026-05-27 17:56:54.200 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:11913 - "POST /api/conversations HTTP/1.1" 200 - 0.05s
+2026-05-27 17:56:54.230 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:11913 - "GET /api/conversations/user/3 HTTP/1.1" 200 - 0.01s
+2026-05-27 17:56:54.448 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:11913 - "GET /api/users/me HTTP/1.1" 200 - 0.01s
+2026-05-27 17:56:54.481 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:11913 - "GET /api/conversations/user/3 HTTP/1.1" 200 - 0.01s
+2026-05-27 17:56:59.153 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:10234 - "GET /health HTTP/1.1" 200 - 0.00s
+2026-05-27 17:57:41.932 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:8656 - "POST /api/register HTTP/1.1" 200 - 0.25s
+2026-05-27 17:57:55.195 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:8702 - "POST /api/register HTTP/1.1" 200 - 0.26s
+2026-05-27 17:57:55.509 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:8706 - "POST /api/token HTTP/1.1" 200 - 0.27s
+2026-05-27 17:58:06.297 | INFO     | main:langgraph_query:294 - Processing LangGraph query for user 5 and conversation None
+2026-05-27 17:58:06.312 | INFO     | main:langgraph_query:333 - Found existing conversation state for thread_id: e771701b-911b-4854-b249-6babfb6bdfec
+2026-05-27 17:58:06.313 | INFO     | main:langgraph_query:366 - Creating new conversation state
+2026-05-27 17:58:06.328 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:8772 - "POST /api/langgraph/query HTTP/1.1" 200 - 0.04s
+2026-05-27 17:58:06.422 | INFO     | app.lg_agent.lg_builder:analyze_and_route_query:78 - Using Ollama model: gemma3:4b
+2026-05-27 17:58:06.422 | INFO     | app.lg_agent.lg_builder:analyze_and_route_query:84 - -----Analyze user query type-----
+2026-05-27 17:58:06.423 | INFO     | app.lg_agent.lg_builder:analyze_and_route_query:85 - History messages: [HumanMessage(content='查询库存不足的商品，并列出对应供应商信息', additional_kwargs={}, response_metadata={}, id='149000cf-a83a-42aa-a4af-e6a6d5b1654e')]
+2026-05-27 17:58:25.980 | INFO     | app.lg_agent.lg_builder:analyze_and_route_query:91 - Analyze user query type completed, result: {'logic': 'graphrag-query', 'type': 'graphrag-query', 'question': '查询库存不足的商品，并列出对应供应商信息'}
+2026-05-27 17:58:25.997 | INFO     | app.lg_agent.lg_builder:create_research_plan:399 - ------execute local knowledge base query------
+2026-05-27 17:58:26.081 | INFO     | app.lg_agent.kg_sub_graph.kg_neo4j_conn:get_neo4j_graph:24 - initialize Neo4j connection: bolt://127.0.0.1:7687
+2026-05-27 17:58:26.667 | ERROR    | app.lg_agent.lg_builder:create_research_plan:413 - failed to get Neo4j graph database connection: Could not use APOC procedures. Please ensure the APOC plugin is installed in Neo4j and that 'apoc.meta.data()' is allowed in Neo4j configuration 
+2026-05-27 17:58:41.548 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:8898 - "GET /openapi.json HTTP/1.1" 200 - 0.10s
+2026-05-27 17:58:41.556 | INFO     | main:upload_file:163 - Uploading file for user 5: technology_companies.txt
+2026-05-27 17:58:41.706 | INFO     | app.services.indexing_service:process_file:79 - 开始处理文件: uploads/8e8dca41-982b-53a3-b298-7d6a2b0ed7ee/20260527_175841/technology_companies_20260527_175841.txt, 类型: text/plain, 用户ID: 5
+2026-05-27 17:58:41.715 | INFO     | app.services.indexing_service:_copy_file_to_input_dir:68 - 已将文件复制到输入目录: E:/workspacce/AI/ai_kefu/deepseek_agent/llm_backend/app/graphrag\data\input\8e8dca41-982b-53a3-b298-7d6a2b0ed7ee\technology_companies_20260527_175841.txt
+2026-05-27 17:58:41.715 | ERROR    | app.services.indexing_service:process_file:154 - 处理文件时发生错误: 'IndexingService' object has no attribute 'config_mapping'
+2026-05-27 17:58:41.716 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:8899 - "POST /api/upload HTTP/1.1" 200 - 0.16s
+2026-05-27 17:58:52.852 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:8936 - "GET /openapi.json HTTP/1.1" 200 - 0.00s
+2026-05-27 17:58:56.597 | INFO     | main:rag_chat_endpoint:214 - Processing RAG chat request for user 5
+2026-05-27 17:58:56.611 | ERROR    | main:rag_chat_endpoint:225 - RAG chat error for user 5: name 'RAGChatService' is not defined
+2026-05-27 17:58:56.612 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:8966 - "POST /chat-rag HTTP/1.1" 500 - 0.02s
+2026-05-27 17:59:04.016 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:8976 - "GET /openapi.json HTTP/1.1" 200 - 0.00s
+2026-05-27 17:59:57.076 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:9958 - "POST /api/register HTTP/1.1" 200 - 0.25s
+2026-05-27 18:00:09.358 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:10022 - "POST /api/register HTTP/1.1" 422 - 0.00s
+2026-05-27 18:00:09.413 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:10023 - "GET /health HTTP/1.1" 200 - 0.00s
+2026-05-27 18:00:46.898 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:10055 - "GET /health HTTP/1.1" 200 - 0.00s
+2026-05-27 18:00:47.154 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:10056 - "POST /api/register HTTP/1.1" 200 - 0.25s
+2026-05-27 18:00:47.432 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:10059 - "POST /api/token HTTP/1.1" 200 - 0.26s
+2026-05-27 18:00:47.456 | INFO     | app.services.conversation_service:create_conversation:32 - Created new conversation 2 for user 7
+2026-05-27 18:00:47.457 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:10060 - "POST /api/conversations HTTP/1.1" 200 - 0.01s
+2026-05-27 18:00:47.483 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:10061 - "GET /api/conversations/user/7 HTTP/1.1" 200 - 0.00s
+2026-05-27 18:00:47.511 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:10064 - "GET /api/conversations/2/messages HTTP/1.1" 200 - 0.01s
+2026-05-27 18:00:47.542 | INFO     | app.services.conversation_service:update_conversation_name:197 - 已更新会话 2 的名称为 codex renamed 1779876046
+2026-05-27 18:00:47.543 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:10065 - "PUT /api/conversations/2/name HTTP/1.1" 200 - 0.01s
+2026-05-27 18:00:47.578 | INFO     | app.services.conversation_service:delete_conversation:175 - 已删除会话 2 及其所有消息
+2026-05-27 18:00:47.579 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:10066 - "DELETE /api/conversations/2 HTTP/1.1" 200 - 0.01s
+2026-05-27 18:01:37.446 | INFO     | app.services.conversation_service:create_conversation:32 - Created new conversation 3 for user 7
+2026-05-27 18:01:37.447 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:10169 - "POST /api/conversations HTTP/1.1" 200 - 0.02s
+2026-05-27 18:01:37.482 | INFO     | app.services.conversation_service:update_conversation_name:197 - 已更新会话 3 的名称为 codex visible conversation 1779876097
+2026-05-27 18:01:37.483 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:10170 - "PUT /api/conversations/3/name HTTP/1.1" 200 - 0.01s
+2026-05-27 18:01:37.511 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:10171 - "GET /api/conversations/user/7 HTTP/1.1" 200 - 0.00s
+2026-05-27 18:01:37.536 | INFO     | app.services.conversation_service:delete_conversation:175 - 已删除会话 3 及其所有消息
+2026-05-27 18:01:37.537 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:10172 - "DELETE /api/conversations/3 HTTP/1.1" 200 - 0.01s
+2026-05-27 18:01:48.653 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:10219 - "GET /api/conversations/user/7 HTTP/1.1" 200 - 0.00s
+2026-05-27 18:06:53.802 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:1318 - "POST /api/chat HTTP/1.1" 422 - 0.00s
+2026-05-27 18:06:53.844 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:1319 - "POST /api/search HTTP/1.1" 422 - 0.00s
+2026-05-27 18:07:11.627 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:1343 - "POST /api/search HTTP/1.1" 422 - 0.00s
+2026-05-27 18:07:11.656 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:1344 - "POST /api/chat HTTP/1.1" 422 - 0.00s
+2026-05-27 18:07:33.308 | INFO     | main:chat_endpoint:98 - Processing chat request for user 1 in conversation 1
+2026-05-27 18:07:33.321 | INFO     | app.services.ollama_service:__init__:11 - Initializing Ollama Service
+2026-05-27 18:07:33.323 | INFO     | app.services.ollama_service:generate_stream:27 - Using model: deepseek-r1:32b
+2026-05-27 18:07:33.338 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:1383 - "POST /api/chat HTTP/1.1" 200 - 0.03s
+2026-05-27 18:07:33.346 | INFO     | main:search_endpoint:140 - Processing search request for user 1 in conversation 1
+2026-05-27 18:07:33.347 | INFO     | main:search_endpoint:141 - Request: messages=[{'content': '今天用一句话回答：SerpAPI 测试搜索 OpenAI 官网。', 'role': 'user'}] user_id=1 conversation_id=1
+2026-05-27 18:07:33.348 | INFO     | app.services.search_service:__init__:17 - Initializing SearchService...
+2026-05-27 18:07:33.408 | INFO     | app.services.search_service:generate_stream:99 - Starting search generation for query: 今天用一句话回答：SerpAPI 测试搜索 OpenAI 官网。
+2026-05-27 18:07:33.409 | INFO     | app.services.search_service:_call_with_tool:71 - Calling model with query: [{'role': 'system', 'content': "你是一个智能助手，可以通过调用外部的工具获取实时信息。\n你可以使用的工具及使用方法如下：\n\n你现在可用的工具有：\n\nsearch，使用谷歌搜索从互联网获取更多的实时信息，必须解析出来的参数是：query，作用是：通过搜索从互联网获取的信息的问题、内容、关键词等  \n\n当你遇到以下情况时，请调用联网检索工具：\n1. 问题涉及实时数据（如天气、新闻、股票）。\n2. 问题涉及最新事件或动态信息（如'今天发生了什么？'）。\n3. 问题涉及特定领域的外部知识（如法律、医疗、科技）。\n4. 问题中包含'最新'、'当前'、'今天'等时间敏感关键词。\n其他情况下，请直接回答用户的问题。"}, {'role': 'user', 'content': '今天用一句话回答：SerpAPI 测试搜索 OpenAI 官网。'}]
+2026-05-27 18:07:33.410 | INFO     | app.services.search_service:_call_with_tool:74 - Messages: [{'role': 'system', 'content': "你是一个智能助手，可以通过调用外部的工具获取实时信息。\n你可以使用的工具及使用方法如下：\n\n你现在可用的工具有：\n\nsearch，使用谷歌搜索从互联网获取更多的实时信息，必须解析出来的参数是：query，作用是：通过搜索从互联网获取的信息的问题、内容、关键词等  \n\n当你遇到以下情况时，请调用联网检索工具：\n1. 问题涉及实时数据（如天气、新闻、股票）。\n2. 问题涉及最新事件或动态信息（如'今天发生了什么？'）。\n3. 问题涉及特定领域的外部知识（如法律、医疗、科技）。\n4. 问题中包含'最新'、'当前'、'今天'等时间敏感关键词。\n其他情况下，请直接回答用户的问题。"}, {'role': 'user', 'content': '今天用一句话回答：SerpAPI 测试搜索 OpenAI 官网。'}]
+2026-05-27 18:07:34.201 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:1384 - "POST /api/search HTTP/1.1" 200 - 0.86s
+2026-05-27 18:07:53.938 | INFO     | main:search_endpoint:140 - Processing search request for user 1 in conversation 1
+2026-05-27 18:07:53.939 | INFO     | main:search_endpoint:141 - Request: messages=[{'role': 'user', 'content': '?????????SerpAPI ???? OpenAI ???'}] user_id=1 conversation_id=1
+2026-05-27 18:07:53.939 | INFO     | app.services.search_service:__init__:17 - Initializing SearchService...
+2026-05-27 18:07:53.977 | INFO     | main:chat_endpoint:98 - Processing chat request for user 1 in conversation 1
+2026-05-27 18:07:53.977 | INFO     | app.services.ollama_service:__init__:11 - Initializing Ollama Service
+2026-05-27 18:07:53.978 | INFO     | app.services.search_service:generate_stream:99 - Starting search generation for query: ?????????SerpAPI ???? OpenAI ???
+2026-05-27 18:07:53.978 | INFO     | app.services.search_service:_call_with_tool:71 - Calling model with query: [{'role': 'system', 'content': "你是一个智能助手，可以通过调用外部的工具获取实时信息。\n你可以使用的工具及使用方法如下：\n\n你现在可用的工具有：\n\nsearch，使用谷歌搜索从互联网获取更多的实时信息，必须解析出来的参数是：query，作用是：通过搜索从互联网获取的信息的问题、内容、关键词等  \n\n当你遇到以下情况时，请调用联网检索工具：\n1. 问题涉及实时数据（如天气、新闻、股票）。\n2. 问题涉及最新事件或动态信息（如'今天发生了什么？'）。\n3. 问题涉及特定领域的外部知识（如法律、医疗、科技）。\n4. 问题中包含'最新'、'当前'、'今天'等时间敏感关键词。\n其他情况下，请直接回答用户的问题。"}, {'role': 'user', 'content': '?????????SerpAPI ???? OpenAI ???'}]
+2026-05-27 18:07:53.978 | INFO     | app.services.search_service:_call_with_tool:74 - Messages: [{'role': 'system', 'content': "你是一个智能助手，可以通过调用外部的工具获取实时信息。\n你可以使用的工具及使用方法如下：\n\n你现在可用的工具有：\n\nsearch，使用谷歌搜索从互联网获取更多的实时信息，必须解析出来的参数是：query，作用是：通过搜索从互联网获取的信息的问题、内容、关键词等  \n\n当你遇到以下情况时，请调用联网检索工具：\n1. 问题涉及实时数据（如天气、新闻、股票）。\n2. 问题涉及最新事件或动态信息（如'今天发生了什么？'）。\n3. 问题涉及特定领域的外部知识（如法律、医疗、科技）。\n4. 问题中包含'最新'、'当前'、'今天'等时间敏感关键词。\n其他情况下，请直接回答用户的问题。"}, {'role': 'user', 'content': '?????????SerpAPI ???? OpenAI ???'}]
+2026-05-27 18:07:53.980 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:8357 - "POST /api/search HTTP/1.1" 200 - 0.04s
+2026-05-27 18:07:53.981 | INFO     | app.services.ollama_service:generate_stream:27 - Using model: deepseek-r1:32b
+2026-05-27 18:07:53.984 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:8356 - "POST /api/chat HTTP/1.1" 200 - 0.05s
+2026-05-27 18:07:57.403 | INFO     | app.services.search_service:generate_stream:189 - Model chose to answer directly, streaming response...
+2026-05-27 18:08:22.928 | INFO     | main:search_endpoint:140 - Processing search request for user 1 in conversation 1
+2026-05-27 18:08:22.931 | INFO     | main:search_endpoint:141 - Request: messages=[{'role': 'user', 'content': '????????OpenAI ????????????????????????'}] user_id=1 conversation_id=1
+2026-05-27 18:08:22.931 | INFO     | app.services.search_service:__init__:17 - Initializing SearchService...
+2026-05-27 18:08:22.986 | INFO     | app.services.search_service:generate_stream:99 - Starting search generation for query: ????????OpenAI ????????????????????????
+2026-05-27 18:08:22.987 | INFO     | app.services.search_service:_call_with_tool:71 - Calling model with query: [{'role': 'system', 'content': "你是一个智能助手，可以通过调用外部的工具获取实时信息。\n你可以使用的工具及使用方法如下：\n\n你现在可用的工具有：\n\nsearch，使用谷歌搜索从互联网获取更多的实时信息，必须解析出来的参数是：query，作用是：通过搜索从互联网获取的信息的问题、内容、关键词等  \n\n当你遇到以下情况时，请调用联网检索工具：\n1. 问题涉及实时数据（如天气、新闻、股票）。\n2. 问题涉及最新事件或动态信息（如'今天发生了什么？'）。\n3. 问题涉及特定领域的外部知识（如法律、医疗、科技）。\n4. 问题中包含'最新'、'当前'、'今天'等时间敏感关键词。\n其他情况下，请直接回答用户的问题。"}, {'role': 'user', 'content': '????????OpenAI ????????????????????????'}]
+2026-05-27 18:08:22.988 | INFO     | app.services.search_service:_call_with_tool:74 - Messages: [{'role': 'system', 'content': "你是一个智能助手，可以通过调用外部的工具获取实时信息。\n你可以使用的工具及使用方法如下：\n\n你现在可用的工具有：\n\nsearch，使用谷歌搜索从互联网获取更多的实时信息，必须解析出来的参数是：query，作用是：通过搜索从互联网获取的信息的问题、内容、关键词等  \n\n当你遇到以下情况时，请调用联网检索工具：\n1. 问题涉及实时数据（如天气、新闻、股票）。\n2. 问题涉及最新事件或动态信息（如'今天发生了什么？'）。\n3. 问题涉及特定领域的外部知识（如法律、医疗、科技）。\n4. 问题中包含'最新'、'当前'、'今天'等时间敏感关键词。\n其他情况下，请直接回答用户的问题。"}, {'role': 'user', 'content': '????????OpenAI ????????????????????????'}]
+2026-05-27 18:08:22.991 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:5887 - "POST /api/search HTTP/1.1" 200 - 0.06s
+2026-05-27 18:08:24.921 | INFO     | app.services.search_service:generate_stream:189 - Model chose to answer directly, streaming response...
+2026-05-27 18:09:56.036 | INFO     | main:chat_endpoint:98 - Processing chat request for user 1 in conversation 1
+2026-05-27 18:09:56.036 | INFO     | app.services.ollama_service:__init__:11 - Initializing Ollama Service
+2026-05-27 18:09:56.038 | INFO     | app.services.ollama_service:generate_stream:27 - Using model: deepseek-r1:32b
+2026-05-27 18:09:56.040 | INFO     | app.core.middleware:dispatch:18 - 127.0.0.1:9244 - "POST /api/chat HTTP/1.1" 200 - 0.01s

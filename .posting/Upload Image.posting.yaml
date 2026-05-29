@@ -1,0 +1,10 @@
+name: Upload Image
+description: 上传图片并返回图片存储路径
+method: POST
+url: ${BASE_URL}/api/upload/image
+body:
+  form_data:
+  - name: user_id
+    value: '1'
+  - name: conversation_id
+    value: '1'

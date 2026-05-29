@@ -1,0 +1,101 @@
+{
+  "name": "ai_kefu_local",
+  "values": [
+    {
+      "key": "BASE_URL",
+      "value": "http://127.0.0.1:8000",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "EMAIL",
+      "value": "1460952065@qq.com",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "email",
+      "value": "1460952065@qq.com",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "PASSWORD",
+      "value": "hehehehe123",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "password",
+      "value": "hehehehe123",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "USERNAME",
+      "value": "1460952065",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "username",
+      "value": "1460952065",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "ACCESS_TOKEN",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "USER_ID",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "CONVERSATION_ID",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "conversationId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "INDEX_ID",
+      "value": "test-index",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "indexId",
+      "value": "test-index",
+      "type": "default",
+      "enabled": true
+    }
+  ]
+}

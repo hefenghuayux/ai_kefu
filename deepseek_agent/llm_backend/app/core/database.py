@@ -10,7 +10,7 @@ logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=False,  # 设置为 False 也可以关闭 SQL 日志
-    pool_pre_ping=True,  # 自动检测断开的连接
+    pool_pre_ping=False,  # 当前 SQLAlchemy + aiomysql 组合会在预 ping 时触发 ping(reconnect) 参数兼容问题
     pool_size=5,  # 连接池大小， 保持 5 个连接处于可用状态。在高并发情况下，最多可以同时处理 5 个数据库请求，而不需要每次都去创建新的连接。
     max_overflow=10  # 最大溢出连接数，如果连接池中的连接都被占用，最多可以再创建 10 个额外的连接。因此，最多可以同时处理 15 个请求（5 个常规连接 + 10 个溢出连接）。超出这个数量的请求将会被阻塞，直到有连接可用。
 )
