@@ -13,7 +13,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_deepseek import ChatDeepSeek
 from langchain_ollama import ChatOllama
 from app.core.config import settings, ServiceType
-from app.core.logger import get_logger
+from app.core.logger import get_logger, log_event
 from typing import cast, Literal, TypedDict, List, Dict, Any
 from langchain_core.messages import BaseMessage
 from langgraph.checkpoint.memory import MemorySaver
@@ -54,6 +54,14 @@ class AdditionalGuardrailsOutput(BaseModel):
 # 构建日志记录器
 logger = get_logger(service="lg_builder")
 
+
+def _config_log_fields(config: RunnableConfig) -> dict[str, Any]:
+    configurable = config.get("configurable", {}) if config else {}
+    return {
+        "thread_id": configurable.get("thread_id"),
+        "user_id": configurable.get("user_id"),
+    }
+
 async def analyze_and_route_query(
     state: AgentState, *, config: RunnableConfig
 ) -> dict[str, Router]:
@@ -70,25 +78,32 @@ async def analyze_and_route_query(
         dict[str, Router]: A dictionary containing the 'router' key with the classification result (classification type and logic).
     """
     # 选择模型实例，通过.env文件中的AGENT_SERVICE参数选择
+    node_logger = logger.bind(**_config_log_fields(config), node="analyze_and_route_query")
+    log_event(node_logger, "INFO", "node_started", message_count=len(state.messages))
     if settings.AGENT_SERVICE == ServiceType.DEEPSEEK:
         model = ChatDeepSeek(api_key=settings.DEEPSEEK_API_KEY, model_name=settings.DEEPSEEK_MODEL, temperature=0.7, tags=["router"])
-        logger.info(f"Using DeepSeek model: {settings.DEEPSEEK_MODEL}")
+        log_event(node_logger, "INFO", "model_called", model=settings.DEEPSEEK_MODEL)
     else:
         model = ChatOllama(model=settings.OLLAMA_AGENT_MODEL, base_url=settings.OLLAMA_BASE_URL, temperature=0.7, tags=["router"])
-        logger.info(f"Using Ollama model: {settings.OLLAMA_AGENT_MODEL}")
+        log_event(node_logger, "INFO", "model_called", model=settings.OLLAMA_AGENT_MODEL)
 
     # 拼接提示模版 + 用户的实时问题（包含历史上下文对话） 
     messages = [
         {"role": "system", "content": ROUTER_SYSTEM_PROMPT}
     ] + state.messages
-    logger.info("-----Analyze user query type-----")
-    logger.info(f"History messages: {state.messages}")
+    log_event(node_logger, "INFO", "router_analysis_started", message_count=len(state.messages))
     
     # 使用结构化输出，输出问题类型
     response = cast(
         Router, await model.with_structured_output(Router).ainvoke(messages)
     )
-    logger.info(f"Analyze user query type completed, result: {response}")
+    log_event(
+        node_logger,
+        "INFO",
+        "node_finished",
+        route_type=response["type"],
+        logic_len=len(response["logic"]),
+    )
     return {"router": response}
 
 def route_query(
@@ -106,7 +121,7 @@ def route_query(
     
     # 检查配置中是否有图片路径，如果有，优先处理为图片查询
     if hasattr(state, "config") and state.config and state.config.get("configurable", {}).get("image_path"):
-        logger.info("检测到图片路径，转为图片查询处理")
+        log_event(logger, "INFO", "route_image_query", node="route_query")
         return "create_image_query"
 
     if _type == "general-query":
@@ -136,7 +151,8 @@ async def respond_to_general_query(
     Returns:
         Dict[str, List[BaseMessage]]: 包含'messages'键的字典，其中包含生成的响应。
     """
-    logger.info("-----generate general-query response-----")
+    node_logger = logger.bind(**_config_log_fields(config), node="respond_to_general_query")
+    log_event(node_logger, "INFO", "node_started", message_count=len(state.messages))
     
     # 使用大模型生成回复
     if settings.AGENT_SERVICE == ServiceType.DEEPSEEK:
@@ -150,6 +166,7 @@ async def respond_to_general_query(
     
     messages = [{"role": "system", "content": system_prompt}] + state.messages
     response = await model.ainvoke(messages)
+    log_event(node_logger, "INFO", "node_finished", content_len=len(response.content))
     return {"messages": [response]}
 
 async def get_additional_info(
@@ -166,7 +183,8 @@ async def get_additional_info(
     Returns:
         Dict[str, List[BaseMessage]]: 包含'messages'键的字典，其中包含生成的响应。
     """
-    logger.info("------continue to get additional info------")
+    node_logger = logger.bind(**_config_log_fields(config), node="get_additional_info")
+    log_event(node_logger, "INFO", "node_started", message_count=len(state.messages))
     
     # 使用大模型生成回复
     if settings.AGENT_SERVICE == ServiceType.DEEPSEEK:
@@ -178,10 +196,11 @@ async def get_additional_info(
 
     # 首先连接 Neo4j 图数据库
     try:
+        log_event(node_logger, "INFO", "neo4j_query_started", operation="connect")
         neo4j_graph = get_neo4j_graph()
-        logger.info("success to get Neo4j graph database connection")
+        log_event(node_logger, "INFO", "neo4j_query_finished", operation="connect")
     except Exception as e:
-        logger.error(f"failed to get Neo4j graph database connection: {e}")
+        log_event(node_logger, "ERROR", "neo4j_query_failed", operation="connect", reason=str(e), exception=True)
 
     # 定义电商经营范围
     scope_description = """
@@ -233,15 +252,16 @@ async def get_additional_info(
 
     # 根据格式化输出的结果，返回不同的响应
     if guardrails_output.decision == "end":
-        logger.info("-----Fail to pass guardrails check-----")
+        log_event(node_logger, "INFO", "guardrails_finished", decision="end")
         return {"messages": [AIMessage(content="抱歉，我家暂时没有这方面的商品，可以在别家看看哦~")]}
     else:
-        logger.info("-----Pass guardrails check-----")
+        log_event(node_logger, "INFO", "guardrails_finished", decision="continue")
         system_prompt = GET_ADDITIONAL_SYSTEM_PROMPT.format(
             logic=state.router["logic"]
         )
         messages = [{"role": "system", "content": system_prompt}] + state.messages
         response = await model.ainvoke(messages)
+        log_event(node_logger, "INFO", "node_finished", content_len=len(response.content))
         return {"messages": [response]}
 
 async def create_image_query(
@@ -256,11 +276,12 @@ async def create_image_query(
     Returns:
         Dict[str, List[BaseMessage]]: 包含'messages'键的字典，其中包含生成的响应
     """
-    logger.info("-----Found User Upload Image-----")    
+    node_logger = logger.bind(**_config_log_fields(config), node="create_image_query")
+    log_event(node_logger, "INFO", "node_started", message_count=len(state.messages))
     image_path = config.get("configurable", {}).get("image_path", None)
 
     if not image_path or not Path(image_path).exists():
-        logger.warning(f"User Upload Image Not Found: {image_path}")
+        log_event(node_logger, "WARNING", "image_not_found", image_path=image_path)
         return {"messages": [AIMessage(content="抱歉，我无法查看这张图片，请重新上传。")]}
     
     # 获取视觉模型配置
@@ -269,10 +290,10 @@ async def create_image_query(
     vision_model = settings.VISION_MODEL
     
     if not api_key or not base_url or not vision_model:
-        logger.error("Vision Model Configuration Not Complete")
+        log_event(node_logger, "ERROR", "vision_config_missing")
         return {"messages": [AIMessage(content="抱歉，我无法查看这张图片，请重新上传。")]}
     
-    logger.info(f"Using Vision Model: {vision_model} to process image: {image_path}")
+    log_event(node_logger, "INFO", "model_called", model=vision_model)
     
     try:
         # 导入图片处理库
@@ -305,7 +326,13 @@ async def create_image_query(
             # 转换为base64
             image_data = base64.b64encode(img_byte_arr.read()).decode('utf-8')
             
-            logger.info(f"Image Compressed, Original Size: {width}x{height}, New Size: {resized_img.width}x{resized_img.height}")
+            log_event(
+                node_logger,
+                "INFO",
+                "image_compressed",
+                original_size=f"{width}x{height}",
+                resized_size=f"{resized_img.width}x{resized_img.height}",
+            )
         
         # 构建API请求
         headers = {
@@ -347,7 +374,7 @@ async def create_image_query(
                 if response.status == 200:
                     result = await response.json()
                     image_description = result["choices"][0]["message"]["content"]
-                    logger.info(f"Successfully processed image and generated description")
+                    log_event(node_logger, "INFO", "image_description_generated")
                     # 使用图片描述和用户问题生成最终回复
                     # 从lg_prompts导入电商客服模板
                     
@@ -366,7 +393,7 @@ async def create_image_query(
         
                 else:
                     error_text = await response.text()
-                    logger.error(f"Vision API Request Failed: {response.status} - {error_text}")
+                    log_event(node_logger, "ERROR", "vision_api_failed", status=response.status, reason=error_text[:200])
                     return {"messages": [AIMessage(content=f"抱歉，我无法查看这张图片，请重新上传。")]}
 
 
@@ -374,7 +401,7 @@ async def create_image_query(
 
 
     except Exception as e:
-        logger.error(f"Error processing image: {str(e)}")
+        log_event(node_logger, "ERROR", "image_processing_error", reason=str(e), exception=True)
         return {"messages": [AIMessage(content=f"抱歉，我无法查看这张图片，请重新上传。")]}
 
 async def create_file_query(
@@ -396,7 +423,8 @@ async def create_research_plan(
     Returns:
         Dict[str, List[str] | str]: 包含'steps'键的字典，其中包含研究步骤列表。
     """
-    logger.info("------execute local knowledge base query------")
+    node_logger = logger.bind(**_config_log_fields(config), node="create_research_plan")
+    log_event(node_logger, "INFO", "node_started", message_count=len(state.messages))
 
     # 使用大模型生成查询/多跳、并行查询计划
     if settings.AGENT_SERVICE == ServiceType.DEEPSEEK:
@@ -407,10 +435,11 @@ async def create_research_plan(
     # 初始化必要参数
     # 1. Neo4j图数据库连接 - 使用配置中的连接信息
     try:
+        log_event(node_logger, "INFO", "neo4j_query_started", operation="connect")
         neo4j_graph = get_neo4j_graph()
-        logger.info("success to get Neo4j graph database connection")
+        log_event(node_logger, "INFO", "neo4j_query_finished", operation="connect")
     except Exception as e:
-        logger.error(f"failed to get Neo4j graph database connection: {e}")
+        log_event(node_logger, "ERROR", "neo4j_query_failed", operation="connect", reason=str(e), exception=True)
 
     # 2. 创建自定义检索器实例，根据 Graph Schema 创建 Cypher 示例，用来引导大模型生成正确的Cypher 查询语句
     cypher_retriever = NorthwindCypherRetriever()
@@ -456,7 +485,15 @@ async def create_research_plan(
     }
     
     # 执行工作流
+    log_event(node_logger, "INFO", "tool_called", tool="multi_tool_workflow", query_len=len(last_message))
     response = await multi_tool_workflow.ainvoke(input_state)
+    log_event(
+        node_logger,
+        "INFO",
+        "node_finished",
+        tool="multi_tool_workflow",
+        content_len=len(response.get("answer", "")),
+    )
     return {"messages": [AIMessage(content=response["answer"])]}
 
 async def check_hallucinations(
@@ -488,9 +525,11 @@ async def check_hallucinations(
         {"role": "system", "content": system_prompt}
     ] + state.messages
 
-    logger.info("---CHECK HALLUCINATIONS---")
+    node_logger = logger.bind(**_config_log_fields(config), node="check_hallucinations")
+    log_event(node_logger, "INFO", "node_started", message_count=len(state.messages))
     
     response = cast(GradeHallucinations, await model.with_structured_output(GradeHallucinations).ainvoke(messages))
+    log_event(node_logger, "INFO", "node_finished", hallucination_score=response.binary_score)
     
     return {"hallucination": response} 
 

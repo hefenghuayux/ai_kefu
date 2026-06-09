@@ -11,7 +11,7 @@ from app.graphrag.graphrag.callbacks.noop_query_callbacks import NoopQueryCallba
 from app.graphrag.graphrag.utils.storage import load_table_from_storage
 from app.graphrag.graphrag.storage.file_pipeline_storage import FilePipelineStorage
 from app.lg_agent.kg_sub_graph.kg_neo4j_conn import get_neo4j_graph
-from app.core.logger import get_logger
+from app.core.logger import get_logger, log_event
 from langchain_ollama import ChatOllama
 from langchain_deepseek import ChatDeepSeek
 from app.core.config import settings, ServiceType
@@ -62,6 +62,8 @@ def create_cypher_query_node(
         errors = list()
         # 获取查询文本
         query = state.get("task", "")
+        node_logger = logger.bind(node="cypher_query")
+        log_event(node_logger, "INFO", "node_started", query_len=len(query))
         if not query:
             errors.append("未提供查询文本")
  
@@ -74,10 +76,11 @@ def create_cypher_query_node(
 
         # 2. 获取Neo4j图数据库连接
         try:
+            log_event(node_logger, "INFO", "neo4j_query_started", operation="connect")
             neo4j_graph = get_neo4j_graph()
-            logger.info("success to get Neo4j graph database connection")
+            log_event(node_logger, "INFO", "neo4j_query_finished", operation="connect")
         except Exception as e:
-            logger.error(f"failed to get Neo4j graph database connection: {e}")
+            log_event(node_logger, "ERROR", "neo4j_query_failed", operation="connect", reason=str(e), exception=True)
 
         # step 2. 创建自定义检索器实例，根据 Graph Schema 创建 Cypher 示例，用来引导大模型生成正确的Cypher 查询语句
         cypher_retriever = NorthwindCypherRetriever()
@@ -88,6 +91,7 @@ def create_cypher_query_node(
         )
 
         cypher_result = await cypher_generation(state)
+        log_event(node_logger, "INFO", "cypher_generated", cypher_len=len(str(cypher_result)))
         #  TODO: Example 1. 直接使用大模型生成 Cypher 查询语句
         """
         # 安装依赖
@@ -142,15 +146,26 @@ def create_cypher_query_node(
 
         # step 5. 获取执行Cypher查询的全部信息
         execute_info = await validate_cypher(state=state)
+        log_event(node_logger, "INFO", "cypher_validated", cypher_len=len(str(execute_info)))
 
         # step 6. 执行 Cypher 查询语句
         execute_cypher = create_text2cypher_execution_node(
             graph=neo4j_graph, cypher=execute_info
         )
 
+        log_event(node_logger, "INFO", "neo4j_query_started", operation="execute_cypher")
         final_result = await execute_cypher(state)
+        result_count = len(final_result.get("cyphers", [])) if isinstance(final_result, dict) else 0
+        log_event(
+            node_logger,
+            "INFO",
+            "neo4j_query_finished",
+            operation="execute_cypher",
+            result_count=result_count,
+        )
 
         # 封装 单次子任务执行的 输出结果并通过Pydantic模型限定格式
+        log_event(node_logger, "INFO", "node_finished", result_count=result_count)
         return {
             "cyphers": [
                 CypherQueryOutputState(

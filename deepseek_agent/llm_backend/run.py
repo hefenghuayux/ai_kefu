@@ -1,5 +1,5 @@
 import uvicorn
-from app.core.logger import get_logger
+from app.core.logger import get_logger, log_event
 import os
 from pathlib import Path
 #powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\start_project.ps1
@@ -10,8 +10,15 @@ def start_server():
     # 确保工作目录正确
     os.chdir(Path(__file__).parent)
     
-    logger.info("Starting server...")
-    logger.info(f"Working directory: {os.getcwd()}")
+    log_event(
+        logger,
+        "INFO",
+        "server_started",
+        host="0.0.0.0",
+        port=8000,
+        cwd=os.getcwd(),
+        console=True,
+    )
     
     uvicorn.run(
         "main:app",        # 使用模块路径

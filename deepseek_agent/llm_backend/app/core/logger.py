@@ -1,49 +1,236 @@
-from loguru import logger
+from __future__ import annotations
+
+import contextvars
+import os
 import sys
 from pathlib import Path
-import json
+from typing import Any
 
-# 创建日志目录， Path 指的是当前工作目录下的 logs 目录。如果你在不同的目录中运行脚本，logs 目录的位置也会相应变化。
-# 也就是说：logs 目录的位置取决于运行 Python 程序时的当前工作目录。不同的组件或模块在不同的工作目录下运行时，logs 目录也会位于不同的位置。
-log_dir = Path("logs")
-log_dir.mkdir(exist_ok=True)
+from loguru import logger as _base_logger
 
-# 移除默认的控制台输出
-logger.remove()
 
-# 添加控制台输出
+PROJECT_ROOT = Path(__file__).resolve().parents[4]
+
+
+def _env_enabled(name: str, default: str) -> bool:
+    return os.getenv(name, default).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _resolve_log_dir() -> Path:
+    configured = os.getenv("AI_KEFU_LOG_DIR")
+    if configured:
+        path = Path(configured)
+        if not path.is_absolute():
+            path = PROJECT_ROOT / path
+        return path
+    return PROJECT_ROOT / "logs"
+
+
+LOG_DIR = _resolve_log_dir()
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+LOG_LEVEL = os.getenv("AI_KEFU_LOG_LEVEL", "INFO").upper()
+CONSOLE_LOG_ENABLED = _env_enabled("AI_KEFU_CONSOLE_LOG", "1")
+TRACE_LOG_ENABLED = _env_enabled("AI_KEFU_TRACE_LOG", "0")
+
+_request_context: contextvars.ContextVar[dict[str, Any]] = contextvars.ContextVar(
+    "request_log_context", default={}
+)
+
+_ORDERED_FIELDS = (
+    "event",
+    "request_id",
+    "conversation_id",
+    "user_id",
+    "thread_id",
+    "path",
+    "method",
+    "status",
+    "client",
+    "node",
+    "tool",
+    "model",
+    "elapsed_ms",
+    "reason",
+)
+
+_INTERNAL_EXTRA_FIELDS = {"formatted", "log_sink", "console"}
+
+
+def _clean_value(value: Any) -> str:
+    if value is None:
+        return "-"
+    if isinstance(value, bool):
+        return str(value).lower()
+    if isinstance(value, (int, float)):
+        return str(value)
+
+    text = str(value).replace("\r", " ").replace("\n", " ").replace("\t", " ")
+    text = " ".join(text.split())
+    if not text:
+        return '""'
+    if any(char.isspace() for char in text) or any(char in text for char in ['"', "="]):
+        text = text.replace("\\", "\\\\").replace('"', '\\"')
+        return f'"{text}"'
+    return text
+
+
+def _format_log_line(record: dict[str, Any]) -> str:
+    extra = record["extra"]
+    service = extra.get("service") or record["name"]
+    parts = [
+        f"ts={record['time'].strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]}",
+        f"level={record['level'].name}",
+        f"service={_clean_value(service)}",
+    ]
+
+    for key in _ORDERED_FIELDS:
+        if key in extra:
+            parts.append(f"{key}={_clean_value(extra.get(key))}")
+
+    for key in sorted(extra):
+        if key in _ORDERED_FIELDS or key in _INTERNAL_EXTRA_FIELDS or key == "service":
+            continue
+        parts.append(f"{key}={_clean_value(extra.get(key))}")
+
+    message = record["message"]
+    if message:
+        parts.append(f"message={_clean_value(message)}")
+
+    source = f"{record['name']}:{record['function']}:{record['line']}"
+    parts.append(f"source={_clean_value(source)}")
+    return " ".join(parts)
+
+
+def _patch_record(record: dict[str, Any]) -> None:
+    extra = record["extra"]
+    for key, value in _request_context.get().items():
+        extra.setdefault(key, value)
+    extra["formatted"] = _format_log_line(record)
+
+
+def _is_access_log(record: dict[str, Any]) -> bool:
+    return record["extra"].get("log_sink") == "access"
+
+
+def _is_trace_sink(record: dict[str, Any]) -> bool:
+    return record["extra"].get("log_sink") == "trace"
+
+
+def _is_app_log(record: dict[str, Any]) -> bool:
+    return (
+        not _is_access_log(record)
+        and not _is_trace_sink(record)
+        and record["level"].no < _base_logger.level("ERROR").no
+    )
+
+
+def _is_error_log(record: dict[str, Any]) -> bool:
+    return (
+        not _is_access_log(record)
+        and not _is_trace_sink(record)
+        and record["level"].no >= _base_logger.level("ERROR").no
+    )
+
+
+def _is_trace_log(record: dict[str, Any]) -> bool:
+    return _is_trace_sink(record) and record["exception"] is not None
+
+
+def _is_console_log(record: dict[str, Any]) -> bool:
+    if not CONSOLE_LOG_ENABLED or _is_access_log(record) or _is_trace_sink(record):
+        return False
+    return record["extra"].get("console") is True or record["level"].no >= _base_logger.level("WARNING").no
+
+
+_base_logger.remove()
+logger = _base_logger.patch(_patch_record)
+
 logger.add(
     sys.stdout,
-    format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
-    level="INFO"
-)
-
-# 添加文件输出
-logger.add(
-    "logs/app.log",  # 普通日志文件
-    rotation="500 MB",  # 日志文件大小超过500MB时轮转
-    retention="10 days",  # 保留10天的日志
-    compression="zip",  # 压缩旧的日志文件
-    format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
+    format="{extra[formatted]}",
     level="INFO",
-    encoding="utf-8"
+    filter=_is_console_log,
+    colorize=False,
 )
 
-# 错误日志单独存储
 logger.add(
-    "logs/error.log",  # 错误日志文件
-    rotation="100 MB",
-    retention="30 days",
-    compression="zip",
-    format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
-    level="ERROR",
-    encoding="utf-8"
+    str(LOG_DIR / "access_{time:YYYY-MM-DD}.log"),
+    rotation="00:00",
+    retention="14 days",
+    format="{extra[formatted]}",
+    level="INFO",
+    filter=_is_access_log,
+    encoding="utf-8",
 )
+
+logger.add(
+    str(LOG_DIR / "app_{time:YYYY-MM-DD}.log"),
+    rotation="00:00",
+    retention="14 days",
+    format="{extra[formatted]}",
+    level=LOG_LEVEL,
+    filter=_is_app_log,
+    encoding="utf-8",
+)
+
+logger.add(
+    str(LOG_DIR / "error_{time:YYYY-MM-DD}.log"),
+    rotation="00:00",
+    retention="30 days",
+    format="{extra[formatted]}",
+    level="ERROR",
+    filter=_is_error_log,
+    encoding="utf-8",
+)
+
+if TRACE_LOG_ENABLED:
+    logger.add(
+        str(LOG_DIR / "trace_{time:YYYY-MM-DD}.log"),
+        rotation="00:00",
+        retention="7 days",
+        format="{extra[formatted]}",
+        level="ERROR",
+        filter=_is_trace_log,
+        encoding="utf-8",
+    )
+
 
 def get_logger(service: str):
-    """获取带有服务名称的 logger"""
+    """Return a logger bound to a stable service name."""
     return logger.bind(service=service)
 
+
+def bind_request_context(
+    request_id: str,
+    user_id: int | str | None = None,
+    conversation_id: int | str | None = None,
+    thread_id: str | None = None,
+):
+    context = {"request_id": request_id}
+    if user_id is not None:
+        context["user_id"] = user_id
+    if conversation_id is not None:
+        context["conversation_id"] = conversation_id
+    if thread_id is not None:
+        context["thread_id"] = thread_id
+    return _request_context.set(context)
+
+
+def reset_request_context(token) -> None:
+    _request_context.reset(token)
+
+
+def log_event(event_logger, level: str, event: str, **fields: Any) -> None:
+    exception = fields.pop("exception", None)
+    event_logger.bind(event=event, **fields).log(level.upper(), "")
+
+    if exception and TRACE_LOG_ENABLED:
+        event_logger.bind(event=event, log_sink="trace", **fields).opt(
+            exception=exception
+        ).log(level.upper(), "")
+
+
 def log_structured(event_type: str, data: dict):
-    """结构化日志记录"""
-    logger.info({"event_type": event_type, "data": data}) 
+    """Compatibility helper for older structured log call sites."""
+    log_event(get_logger("structured"), "INFO", event_type, **data)
