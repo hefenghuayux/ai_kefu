@@ -1,9 +1,0 @@
-name: Get Conversation Messages
-description: 获取会话的所有消息
-url: ${BASE_URL}/api/conversations/{conversation_id}/messages
-path_params:
-- name: conversation_id
-  value: '1'
-params:
-- name: user_id
-  value: '1'

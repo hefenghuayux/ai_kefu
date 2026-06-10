@@ -110,7 +110,11 @@ TEXT2CYPHER_VALIDATION_PROMPT = """
 
 TOOL_SELECTION_SYSTEM_PROMPT = """
 你是一个电商平台智能客服系统中的工具选择组件。你的职责是根据用户的问题选择合适的工具。
-你默认应该选择text2cypher工具，除非其他的工具完全匹配用户输入的问题。
+工具边界：
+1. 店铺营业时间、店铺地址、优惠券基础信息、活动规则、使用说明、售后政策等静态或半静态知识，优先选择predefined_cypher或microsoft_graphrag_query。
+2. 订单状态、用户订单列表、秒杀实时库存、用户是否还能购买、用户是否已经买过某张券等实时业务状态，必须选择commerce_live_query。
+3. 需要根据图谱结构临时生成查询时，选择cypher_query。
+4. 不要把订单、库存、购买资格这类实时状态交给Neo4j或GraphRAG回答。
 """
 
 

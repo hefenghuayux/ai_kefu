@@ -445,8 +445,8 @@ async def create_research_plan(
     cypher_retriever = NorthwindCypherRetriever()
 
     # step 3. 定义工具模式列表    
-    from app.lg_agent.kg_sub_graph.kg_tools_list import cypher_query, predefined_cypher, microsoft_graphrag_query
-    tool_schemas: List[type[BaseModel]] = [cypher_query, predefined_cypher, microsoft_graphrag_query]
+    from app.lg_agent.kg_sub_graph.kg_tools_list import cypher_query, predefined_cypher, microsoft_graphrag_query, commerce_live_query
+    tool_schemas: List[type[BaseModel]] = [cypher_query, predefined_cypher, microsoft_graphrag_query, commerce_live_query]
 
     # 3. 预定义的Cypher查询 - 为电商场景定义有用的查询
     from app.lg_agent.kg_sub_graph.agentic_rag_agents.components.predefined_cypher.cypher_dict import predefined_cypher_dict

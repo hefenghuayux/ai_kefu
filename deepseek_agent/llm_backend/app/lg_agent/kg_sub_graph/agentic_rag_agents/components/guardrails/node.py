@@ -12,7 +12,7 @@ from langchain_neo4j import Neo4jGraph
 from app.lg_agent.kg_sub_graph.agentic_rag_agents.components.guardrails.models import GuardrailsOutput
 from app.lg_agent.kg_sub_graph.agentic_rag_agents.components.guardrails.prompts import create_guardrails_prompt_template
 from app.lg_agent.kg_sub_graph.agentic_rag_agents.components.state import InputState
-from app.core.logger import get_logger
+from app.core.logger import get_logger, log_event
 
 # 获取日志记录器
 logger = get_logger(service="guardrails_node")
@@ -75,7 +75,20 @@ def create_guardrails_node(
             "steps": ["guardrails"],
         }
         
-        logger.info(f"Guardrails Decision Info: {decision_info}")
+        log_event(
+            logger,
+            "INFO",
+            "safety_decision",
+            node="guardrails",
+            decision="reject" if guardrails_output.decision == "end" else "allow",
+        )
+        log_event(
+            logger,
+            "INFO",
+            "guardrails_finished",
+            node="guardrails",
+            decision=guardrails_output.decision,
+        )
 
         return decision_info
 

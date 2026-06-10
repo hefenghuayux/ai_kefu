@@ -9,7 +9,15 @@ from fastapi.staticfiles import StaticFiles
 from datetime import datetime
 from pathlib import Path
 
-from app.core.logger import get_logger, log_event, log_structured
+from app.core.logger import (
+    DEBUG_TRACE_ENABLED,
+    clear_trace,
+    get_logger,
+    get_trace,
+    log_event,
+    log_structured,
+    start_trace,
+)
 from app.core.middleware import LoggingMiddleware
 from app.core.config import settings
 from app.api import api_router
@@ -85,10 +93,38 @@ class LangGraphResumeRequest(BaseModel):
     query: str
     user_id: int
     conversation_id: str
+    debug_trace: Optional[bool] = None
 
 
 def _state_has_interrupt(state) -> bool:
     return bool(state and any(task.interrupts for task in state.tasks))
+
+
+def _truthy(value) -> bool:
+    return str(value).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _debug_trace_requested(request: Request, payload: Optional[dict] = None) -> bool:
+    if not DEBUG_TRACE_ENABLED:
+        return False
+    return (
+        _truthy(request.query_params.get("debug_trace"))
+        or _truthy(request.headers.get("X-Debug-Trace"))
+        or _truthy((payload or {}).get("debug_trace"))
+    )
+
+
+def _debug_trace_sse(request_id: str, conversation_id: Optional[str], thread_id: str) -> str:
+    trace_json = json.dumps(
+        {
+            "request_id": request_id,
+            "conversation_id": conversation_id,
+            "thread_id": thread_id,
+            "events": get_trace(),
+        },
+        ensure_ascii=False,
+    )
+    return f"event: trace\ndata: {trace_json}\n\n"
 
 
 @app.get("/health")
@@ -342,6 +378,7 @@ async def langgraph_query(
     try:
         # 兼容纯文本查询的 JSON 请求。图片上传仍然走 multipart/form-data。
         content_type = request.headers.get("content-type", "")
+        payload = {}
         if "application/json" in content_type:
             payload = await request.json()
             query = query or payload.get("query")
@@ -361,6 +398,7 @@ async def langgraph_query(
         if user_id is None:
             raise HTTPException(status_code=400, detail="Missing required field: user_id")
 
+        debug_trace = _debug_trace_requested(request, payload)
         request_id = getattr(request.state, "request_id", request.headers.get("X-Request-ID", "-"))
         request_logger = logger.bind(
             request_id=request_id,
@@ -434,6 +472,8 @@ async def langgraph_query(
         if has_interrupt:
             log_event(request_logger, "INFO", "stream_started", mode="resume_interrupted")
             async def process_stream():
+                if debug_trace:
+                    start_trace()
                 try:
                     result = await graph.ainvoke(
                         Command(resume=query),
@@ -462,6 +502,9 @@ async def langgraph_query(
                 if _state_has_interrupt(state):
                     interrupt_json = json.dumps({"interruption": True, "conversation_id": thread_id})
                     yield f"data: {interrupt_json}\n\n"
+                if debug_trace:
+                    yield _debug_trace_sse(request_id, conversation_id, thread_id)
+                clear_trace()
         else:
             if has_existing_state:
                 log_event(request_logger, "INFO", "conversation_state_used")
@@ -471,6 +514,8 @@ async def langgraph_query(
             
             # 流式处理查询
             async def process_stream():
+                if debug_trace:
+                    start_trace()
                 try:
                     log_event(request_logger, "INFO", "stream_started", mode="new_input")
                     result = await graph.ainvoke(
@@ -500,6 +545,9 @@ async def langgraph_query(
                 if _state_has_interrupt(state):
                     interrupt_json = json.dumps({"interruption": True, "conversation_id": thread_id})
                     yield f"data: {interrupt_json}\n\n"
+                if debug_trace:
+                    yield _debug_trace_sse(request_id, conversation_id, thread_id)
+                clear_trace()
         
         response = StreamingResponse(
             process_stream(),
@@ -518,10 +566,13 @@ async def langgraph_query(
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/langgraph/resume")
-async def langgraph_resume(request: LangGraphResumeRequest):
+async def langgraph_resume(http_request: Request, request: LangGraphResumeRequest):
     """继续执行LangGraph流程"""
     try:
+        debug_trace = _debug_trace_requested(http_request, {"debug_trace": request.debug_trace})
+        request_id = getattr(http_request.state, "request_id", http_request.headers.get("X-Request-ID", "-"))
         request_logger = logger.bind(
+            request_id=request_id,
             user_id=request.user_id,
             conversation_id=request.conversation_id,
             thread_id=request.conversation_id,
@@ -533,19 +584,30 @@ async def langgraph_resume(request: LangGraphResumeRequest):
         
         # 流式处理恢复
         async def process_resume():
-            log_event(request_logger, "INFO", "stream_started", mode="resume")
-            async for c, metadata in graph.astream(Command(resume=request.query), stream_mode="messages", config=thread_config):
-                # 只处理最终展示给用户的内容
-                if c.content and not c.additional_kwargs.get("tool_calls"):
-                    # 同样使用json.dumps处理内容
-                    content_json = json.dumps(c.content, ensure_ascii=False)
-                    yield f"data: {content_json}\n\n"
-                
-                # 工具调用单独处理，不发送给前端
-                elif c.additional_kwargs.get("tool_calls"):
-                    tool_data = c.additional_kwargs.get("tool_calls")[0]["function"].get("arguments")
-                    log_event(request_logger, "DEBUG", "tool_called", tool_args_len=len(tool_data or ""))
-            log_event(request_logger, "INFO", "stream_finished", mode="resume")
+            if debug_trace:
+                start_trace()
+            try:
+                log_event(request_logger, "INFO", "stream_started", mode="resume")
+                async for c, metadata in graph.astream(Command(resume=request.query), stream_mode="messages", config=thread_config):
+                    # 只处理最终展示给用户的内容
+                    if c.content and not c.additional_kwargs.get("tool_calls"):
+                        # 同样使用json.dumps处理内容
+                        content_json = json.dumps(c.content, ensure_ascii=False)
+                        yield f"data: {content_json}\n\n"
+                    
+                    # 工具调用单独处理，不发送给前端
+                    elif c.additional_kwargs.get("tool_calls"):
+                        tool_data = c.additional_kwargs.get("tool_calls")[0]["function"].get("arguments")
+                        log_event(request_logger, "DEBUG", "tool_called", tool_args_len=len(tool_data or ""))
+                log_event(request_logger, "INFO", "stream_finished", mode="resume")
+            except Exception as e:
+                log_event(request_logger, "ERROR", "stream_error", reason=str(e), exception=True)
+                error_json = json.dumps({"type": "error", "message": str(e)}, ensure_ascii=False)
+                yield f"data: {error_json}\n\n"
+            finally:
+                if debug_trace:
+                    yield _debug_trace_sse(request_id, request.conversation_id, request.conversation_id)
+                clear_trace()
         
         return StreamingResponse(
             process_resume(),

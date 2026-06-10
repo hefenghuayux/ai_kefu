@@ -1,0 +1,7 @@
+E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\langgraph\checkpoint\base\__init__.py:18: LangChainPendingDeprecationWarning: The default value of `allowed_objects` will change in a future version. Pass an explicit value (e.g., allowed_objects='messages' or allowed_objects='core') to suppress this warning.
+  from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
+E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\langgraph\checkpoint\base\__init__.py:18: LangChainPendingDeprecationWarning: The default value of `allowed_objects` will change in a future version. Pass an explicit value (e.g., allowed_objects='messages' or allowed_objects='core') to suppress this warning.
+  from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
+E:\workspacce\AI\ai_kefu\deepseek_agent\.venv\Lib\site-packages\openai\_utils\_transform.py:383: RuntimeWarning: coroutine 'RunnableSequence.ainvoke' was never awaited
+  data = await _async_transform_recursive(data, annotation=annotation, inner_type=subtype)
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback

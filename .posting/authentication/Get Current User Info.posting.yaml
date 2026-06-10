@@ -1,3 +1,0 @@
-name: Get Current User Info
-description: 获取当前登录用户的信息
-url: ${BASE_URL}/api/users/me

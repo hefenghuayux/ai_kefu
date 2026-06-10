@@ -32,9 +32,13 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 LOG_LEVEL = os.getenv("AI_KEFU_LOG_LEVEL", "INFO").upper()
 CONSOLE_LOG_ENABLED = _env_enabled("AI_KEFU_CONSOLE_LOG", "1")
 TRACE_LOG_ENABLED = _env_enabled("AI_KEFU_TRACE_LOG", "0")
+DEBUG_TRACE_ENABLED = _env_enabled("AI_KEFU_DEBUG_TRACE", "0")
 
 _request_context: contextvars.ContextVar[dict[str, Any]] = contextvars.ContextVar(
     "request_log_context", default={}
+)
+_trace_context: contextvars.ContextVar[list[dict[str, Any]] | None] = contextvars.ContextVar(
+    "request_trace_context", default=None
 )
 
 _ORDERED_FIELDS = (
@@ -107,6 +111,43 @@ def _patch_record(record: dict[str, Any]) -> None:
     for key, value in _request_context.get().items():
         extra.setdefault(key, value)
     extra["formatted"] = _format_log_line(record)
+    _append_trace_event(record)
+
+
+def _json_safe_value(value: Any) -> Any:
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    return str(value)
+
+
+def _append_trace_event(record: dict[str, Any]) -> None:
+    trace_events = _trace_context.get()
+    if trace_events is None or record["extra"].get("log_sink") == "trace":
+        return
+
+    extra = record["extra"]
+    service = extra.get("service") or record["name"]
+    event = {
+        "ts": record["time"].strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3],
+        "level": record["level"].name,
+        "service": _json_safe_value(service),
+    }
+
+    for key in _ORDERED_FIELDS:
+        if key in extra:
+            event[key] = _json_safe_value(extra.get(key))
+
+    for key in sorted(extra):
+        if key in _ORDERED_FIELDS or key in _INTERNAL_EXTRA_FIELDS or key == "service":
+            continue
+        event[key] = _json_safe_value(extra.get(key))
+
+    message = record["message"]
+    if message:
+        event["message"] = _json_safe_value(message)
+
+    event["source"] = f"{record['name']}:{record['function']}:{record['line']}"
+    trace_events.append(event)
 
 
 def _is_access_log(record: dict[str, Any]) -> bool:
@@ -219,6 +260,19 @@ def bind_request_context(
 
 def reset_request_context(token) -> None:
     _request_context.reset(token)
+
+
+def start_trace():
+    return _trace_context.set([])
+
+
+def get_trace() -> list[dict[str, Any]]:
+    trace_events = _trace_context.get()
+    return list(trace_events) if trace_events is not None else []
+
+
+def clear_trace() -> None:
+    _trace_context.set(None)
 
 
 def log_event(event_logger, level: str, event: str, **fields: Any) -> None:

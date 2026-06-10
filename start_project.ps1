@@ -87,6 +87,8 @@ if (-not $SkipBackend) {
     }
 
     Write-Step "Starting backend and static frontend"
+    $env:AI_KEFU_DEBUG_TRACE = "1"
+    Write-Host "Debug trace SSE enabled for this backend process: AI_KEFU_DEBUG_TRACE=1"
     Write-Host "Frontend: http://127.0.0.1:8000"
     Write-Host "API docs: http://127.0.0.1:8000/docs"
     Write-Host "Press Ctrl+C to stop the backend process in this terminal."

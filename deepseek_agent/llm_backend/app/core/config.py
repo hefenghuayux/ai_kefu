@@ -74,6 +74,11 @@ class Settings(BaseSettings):
     GRAPHRAG_RESPONSE_TYPE: str = "text"                    # 响应类型
     GRAPHRAG_COMMUNITY_LEVEL: int = 3                       # 社区级别
     GRAPHRAG_DYNAMIC_COMMUNITY: bool = False                # 是否动态选择社区
+
+    # Commerce platform integration
+    COMMERCE_API_BASE_URL: str = "http://127.0.0.1:8081"
+    COMMERCE_INTERNAL_TOKEN: str = "dev-commerce-token"
+    COMMERCE_API_TIMEOUT: int = 10
     
     @property
     def DATABASE_URL(self) -> str:

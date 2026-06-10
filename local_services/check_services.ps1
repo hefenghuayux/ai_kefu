@@ -9,7 +9,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "MySQL check failed with exit code $LASTEXITCODE"
 }
 
-& $RedisCli "-h" "127.0.0.1" "-p" "6379" "ping"
+& $RedisCli "-h" "127.0.0.1" "-p" "16380" "ping"
 if ($LASTEXITCODE -ne 0) {
     throw "Redis check failed with exit code $LASTEXITCODE"
 }

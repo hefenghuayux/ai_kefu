@@ -1,18 +1,14 @@
 from typing import Any, Callable, Coroutine, Dict, List
-import asyncio
 import os
 from pathlib import Path
 from pydantic import BaseModel, Field
-
-# 导入GraphRAG相关模块
-import app.graphrag.graphrag.api as api
-from app.graphrag.graphrag.config.load_config import load_config
-from app.graphrag.graphrag.callbacks.noop_query_callbacks import NoopQueryCallbacks
-from app.graphrag.graphrag.utils.storage import load_table_from_storage
-from app.graphrag.graphrag.storage.file_pipeline_storage import FilePipelineStorage
+from app.core.logger import get_logger, log_event
+from app.services.commerce_client import CommerceApiClient
 
 # 导入配置
 from app.core.config import settings
+
+logger = get_logger(service="customer_tools")
 
 # 定义GraphRAG查询的输入状态类型
 class GraphRAGQueryInputState(BaseModel):
@@ -57,6 +53,10 @@ class GraphRAGAPI:
         """初始化GraphRAG API，加载必要的数据"""
         if self.initialized:
             return
+
+        from app.graphrag.graphrag.config.load_config import load_config
+        from app.graphrag.graphrag.storage.file_pipeline_storage import FilePipelineStorage
+        from app.graphrag.graphrag.utils.storage import load_table_from_storage
             
         # 构建完整项目路径
         project_directory = os.path.join(self.project_dir, self.data_dir_name)
@@ -93,6 +93,9 @@ class GraphRAGAPI:
     async def query_graphrag(self, query: str) -> Dict[str, Any]:
         """执行GraphRAG查询"""
         await self.initialize()
+
+        import app.graphrag.graphrag.api as api
+        from app.graphrag.graphrag.callbacks.noop_query_callbacks import NoopQueryCallbacks
         
         # 创建回调对象
         callbacks = []
@@ -194,6 +197,44 @@ def create_graphrag_query_node(
         """
         errors = list()
         search_result = {}
+        query_name = state.get("query_name", "")
+        query_parameters = state.get("query_parameters", {})
+        if query_name == "commerce_live_query":
+            try:
+                client = CommerceApiClient()
+                search_result = await client.live_query(
+                    action=query_parameters.get("action"),
+                    order_id=query_parameters.get("order_id"),
+                    user_id=query_parameters.get("user_id"),
+                    voucher_id=query_parameters.get("voucher_id"),
+                )
+                log_event(
+                    logger,
+                    "INFO",
+                    "commerce_live_query_finished",
+                    action=query_parameters.get("action"),
+                    success=search_result.get("success"),
+                )
+            except Exception as e:
+                errors.append(f"Commerce实时查询失败: {str(e)}")
+                log_event(logger, "ERROR", "commerce_live_query_failed", reason=str(e), exception=True)
+
+            return {
+                "cyphers": [
+                    GraphRAGQueryOutputState(
+                        **{
+                            "task": state.get("task", ""),
+                            "query": query_parameters.get("query") or state.get("task", ""),
+                            "statement": "",
+                            "parameters": query_parameters,
+                            "errors": errors,
+                            "records": {"result": search_result},
+                            "steps": ["execute_commerce_live_query"],
+                        }
+                    )
+                ],
+                "steps": ["execute_commerce_live_query"],
+            }
         
         # 获取查询文本
         query = state.get("task", "")
@@ -208,22 +249,25 @@ def create_graphrag_query_node(
             except Exception as e:
                 errors.append(f"GraphRAG查询失败: {str(e)}")
   
-            return {
-                "cyphers": [
-                    GraphRAGQueryOutputState(
-                        **{
-                            "task": state.get("task", ""),
-                            "query": query,
-                            "statement": "",
-                            "parameters":"",
+        return {
+            "cyphers": [
+                GraphRAGQueryOutputState(
+                    **{
+                        "task": state.get("task", ""),
+                        "query": query,
+                        "statement": "",
+                        "parameters":"",
+                        "errors": errors,
+                        "records": {
+                            "result": search_result.get("response"),
                             "errors": errors,
-                            "records": {"result": search_result["response"]},
-                            "steps": ["execute_graphrag_query"],
-                        }
-                    )
-                ],
-                "steps": ["execute_graphrag_query"],
-            }
+                        },
+                        "steps": ["execute_graphrag_query"],
+                    }
+                )
+            ],
+            "steps": ["execute_graphrag_query"],
+        }
   
     return graphrag_query
 

@@ -14,7 +14,9 @@ if (-not (Test-Path $RedisServer)) {
     throw "Redis executable not found: $RedisServer"
 }
 
-$Connection = Get-NetTCPConnection -LocalAddress 127.0.0.1 -LocalPort 6379 -ErrorAction SilentlyContinue
+$RedisPort = "16380"
+
+$Connection = Get-NetTCPConnection -LocalAddress 127.0.0.1 -LocalPort $RedisPort -ErrorAction SilentlyContinue
 if (-not $Connection) {
     Start-Process -FilePath $RedisServer -ArgumentList $ConfigCygwinPath -WorkingDirectory $RedisHome -WindowStyle Hidden
 }
@@ -23,7 +25,7 @@ $Ready = $false
 $SavedErrorActionPreference = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
 for ($i = 0; $i -lt 30; $i++) {
-    & $RedisCli "-h" "127.0.0.1" "-p" "6379" "ping" 1>$null 2>$null
+    & $RedisCli "-h" "127.0.0.1" "-p" $RedisPort "ping" 1>$null 2>$null
     if ($LASTEXITCODE -eq 0) {
         $Ready = $true
         break
@@ -33,7 +35,7 @@ for ($i = 0; $i -lt 30; $i++) {
 $ErrorActionPreference = $SavedErrorActionPreference
 
 if (-not $Ready) {
-    throw "Redis did not become ready on 127.0.0.1:6379"
+    throw "Redis did not become ready on 127.0.0.1:$RedisPort"
 }
 
-& $RedisCli "-h" "127.0.0.1" "-p" "6379" "ping"
+& $RedisCli "-h" "127.0.0.1" "-p" $RedisPort "ping"

@@ -44,5 +44,13 @@ predefined_cypher_dict: Dict[str, str] = {
     # 智能家居相关查询（示例）
     "smart_home_products": "MATCH (p:Product)-[:BELONGS_TO]->(c:Category) WHERE c.CategoryName CONTAINS '智能' RETURN p.ProductName, p.UnitPrice, p.UnitsInStock, c.CategoryName",
     "smart_speakers": "MATCH (p:Product)-[:BELONGS_TO]->(c:Category) WHERE c.CategoryName = '智能音箱' RETURN p.ProductName, p.UnitPrice, p.UnitsInStock",
-    "smart_lighting": "MATCH (p:Product)-[:BELONGS_TO]->(c:Category) WHERE c.CategoryName = '智能照明' RETURN p.ProductName, p.UnitPrice, p.UnitsInStock"
+    "smart_lighting": "MATCH (p:Product)-[:BELONGS_TO]->(c:Category) WHERE c.CategoryName = '智能照明' RETURN p.ProductName, p.UnitPrice, p.UnitsInStock",
+
+    # 单商铺电商客服知识查询
+    "shop_profile": "MATCH (s:Shop) RETURN s.shopId AS shopId, s.name AS name, s.address AS address, s.openHours AS openHours, s.score AS score, s.area AS area, s.avgPrice AS avgPrice LIMIT 5",
+    "shop_open_hours": "MATCH (s:Shop) RETURN s.name AS name, s.openHours AS openHours, s.address AS address LIMIT 5",
+    "voucher_list": "MATCH (s:Shop)-[:OFFERS]->(v:Voucher) RETURN s.name AS shopName, v.voucherId AS voucherId, v.title AS title, v.subTitle AS subTitle, v.payValue AS payValue, v.actualValue AS actualValue, v.status AS status ORDER BY v.voucherId",
+    "voucher_rule": "MATCH (v:Voucher)-[:HAS_RULE]->(p:Policy) RETURN v.voucherId AS voucherId, v.title AS title, p.title AS ruleTitle, p.content AS ruleContent ORDER BY v.voucherId",
+    "activity_list": "MATCH (v:Voucher)-[:BELONGS_TO]->(a:Activity) RETURN a.activityId AS activityId, a.title AS title, a.beginTime AS beginTime, a.endTime AS endTime, a.status AS status, collect(v.title) AS vouchers ORDER BY a.beginTime",
+    "after_sale_policy": "MATCH (s:Shop)-[:HAS_POLICY]->(p:Policy) WHERE p.type = 'after_sale' RETURN s.name AS shopName, p.title AS title, p.content AS content"
 }

@@ -1,2 +1,0 @@
-name: Health Check
-url: ${BASE_URL}/health

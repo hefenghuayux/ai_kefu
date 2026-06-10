@@ -1,9 +1,0 @@
-name: Create Conversation
-description: 创建新会话
-method: POST
-url: ${BASE_URL}/api/conversations
-body:
-  content: |-
-    {
-      "user_id": 1
-    }

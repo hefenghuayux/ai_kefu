@@ -17,7 +17,7 @@ from langchain_core.output_parsers import PydanticToolsParser
 from langchain_core.runnables.base import Runnable
 from langgraph.types import Command, Send
 from pydantic import BaseModel
-from app.core.logger import get_logger
+from app.core.logger import get_logger, log_event
 
 
 from app.lg_agent.kg_sub_graph.agentic_rag_agents.components.state import ToolSelectionInputState
@@ -74,13 +74,21 @@ def create_tool_selection_node(
                 {"question": state.get("question", "")}
             )
         except Exception as e:
-            logger.error(f"Tool selection failed: {str(e)}", exc_info=True)
+            log_event(logger, "ERROR", "tool_selection_failed", reason=str(e), exception=True)
             raise
 
         # 根据路由到对应的工具节点
         if tool_selection_output is not None:
             tool_name: str = tool_selection_output.model_json_schema().get("title", "")
             tool_args: Dict[str, Any] = tool_selection_output.model_dump() 
+            log_event(
+                logger,
+                "INFO",
+                "tool_selection_finished",
+                node="tool_selection",
+                tool=tool_name,
+                task_len=len(state.get("question", "")),
+            )
             if tool_name == "predefined_cypher":
                 return Command(
                     goto=Send(
@@ -124,6 +132,15 @@ def create_tool_selection_node(
                 
         elif default_to_text2cypher:
             question = state.get("question", "")
+            log_event(
+                logger,
+                "INFO",
+                "tool_selection_finished",
+                node="tool_selection",
+                tool="cypher_query",
+                task_len=len(question),
+                defaulted=True,
+            )
             return Command(
                 goto=Send(
                     "cypher_query",
@@ -138,6 +155,14 @@ def create_tool_selection_node(
 
         # handle instance where no tool is chosen
         else:
+            log_event(
+                logger,
+                "WARNING",
+                "tool_selection_finished",
+                node="tool_selection",
+                tool="none",
+                task_len=len(state.get("question", "")),
+            )
             return Command(
                 goto=Send(
                     "error_tool_selection",
