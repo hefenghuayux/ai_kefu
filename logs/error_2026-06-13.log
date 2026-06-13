@@ -1,0 +1,1 @@
+ts=2026-06-13T15:36:48.463 level=ERROR service=main event=langgraph_query_error request_id=cd6554cf-26a7-4358-b432-bfede782fee9 reason="'int' object has no attribute 'encode'" source=app.core.logger:log_event:280

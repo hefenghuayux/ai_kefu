@@ -455,6 +455,85 @@ def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
             output.write(json.dumps(row, ensure_ascii=False, default=str) + "\n")
 
 
+def _to_int(value: Any) -> int | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str) and value.isdigit():
+        return int(value)
+    return None
+
+
+def _event_label(event: dict[str, Any]) -> str:
+    return str(
+        event.get("node")
+        or event.get("tool")
+        or event.get("phase")
+        or event.get("event")
+        or "unknown"
+    )
+
+
+def trace_summary(result: dict[str, Any]) -> dict[str, Any]:
+    events = result.get("trace_events") or []
+    routes = [event.get("route_type") for event in events if event.get("route_type")]
+    tools = [
+        event.get("selected_tool") or event.get("tool") or event.get("query_name")
+        for event in events
+        if event.get("selected_tool") or event.get("tool") or event.get("query_name")
+    ]
+    failed_events = [
+        event for event in events
+        if event.get("status") == "failed" or str(event.get("level", "")).upper() == "ERROR"
+    ]
+    elapsed_events = [
+        event for event in events
+        if _to_int(event.get("elapsed_ms")) is not None
+    ]
+    slowest_event = max(
+        elapsed_events,
+        key=lambda event: _to_int(event.get("elapsed_ms")) or 0,
+        default=None,
+    )
+    result_counts = [
+        count
+        for event in events
+        for count in (_to_int(event.get("result_count")), _to_int(event.get("rows")))
+        if count is not None
+    ]
+    return {
+        "has_trace": bool(events),
+        "event_count": len(events),
+        "route": routes[-1] if routes else None,
+        "selected_tool": tools[-1] if tools else None,
+        "failed_event_count": len(failed_events),
+        "failed_event_reason": failed_events[-1].get("reason") if failed_events else None,
+        "slowest_event": _event_label(slowest_event) if slowest_event else None,
+        "slowest_elapsed_ms": _to_int(slowest_event.get("elapsed_ms")) if slowest_event else None,
+        "max_result_count": max(result_counts) if result_counts else None,
+    }
+
+
+def trace_summary_lines(result: dict[str, Any]) -> list[str]:
+    summary = trace_summary(result)
+    return [
+        f"- trace_present: {str(summary['has_trace']).lower()}",
+        f"- trace_event_count: {summary['event_count']}",
+        f"- trace_route: {summary.get('route') or 'unknown'}",
+        f"- trace_selected_tool: {summary.get('selected_tool') or 'unknown'}",
+        f"- trace_max_result_count: {summary.get('max_result_count') if summary.get('max_result_count') is not None else 'unknown'}",
+        f"- trace_slowest_event: {summary.get('slowest_event') or 'unknown'}"
+        + (
+            f" ({summary['slowest_elapsed_ms']}ms)"
+            if summary.get("slowest_elapsed_ms") is not None
+            else ""
+        ),
+        f"- trace_failed_events: {summary['failed_event_count']}",
+        f"- trace_failed_reason: {summary.get('failed_event_reason') or 'none'}",
+    ]
+
+
 def build_summary(results: list[dict[str, Any]], preflight_checks: list[dict[str, Any]] | None = None) -> str:
     total = len(results)
     passed = sum(1 for result in results if result["passed"])
@@ -463,6 +542,21 @@ def build_summary(results: list[dict[str, Any]], preflight_checks: list[dict[str
     pass_rate = round((passed / total) * 100, 2) if total else 0
     failures = [result for result in results if not result["passed"]]
     failure_counts = Counter(result["failure_category"] for result in failures)
+    trace_summaries = {result["id"]: trace_summary(result) for result in results}
+    missing_trace = [case_id for case_id, summary in trace_summaries.items() if not summary["has_trace"]]
+    trace_failed = [
+        case_id for case_id, summary in trace_summaries.items()
+        if summary["failed_event_count"]
+    ]
+    slowest_trace = max(
+        (
+            (case_id, summary)
+            for case_id, summary in trace_summaries.items()
+            if summary.get("slowest_elapsed_ms") is not None
+        ),
+        key=lambda item: item[1]["slowest_elapsed_ms"],
+        default=None,
+    )
 
     lines = [
         "# AI Kefu Smoke Eval Summary",
@@ -471,6 +565,9 @@ def build_summary(results: list[dict[str, Any]], preflight_checks: list[dict[str
         f"- passed: {passed}",
         f"- pass_rate: {pass_rate}%",
         f"- avg_latency_ms: {avg_latency}",
+        f"- cases_with_trace: {total - len(missing_trace)}",
+        f"- cases_missing_trace: {len(missing_trace)}",
+        f"- cases_with_failed_trace_event: {len(trace_failed)}",
         "",
         "## Preflight",
         "",
@@ -495,11 +592,32 @@ def build_summary(results: list[dict[str, Any]], preflight_checks: list[dict[str
     else:
         lines.append("- none")
 
+    lines.extend(["", "## Trace Observability", ""])
+    if slowest_trace:
+        case_id, summary = slowest_trace
+        lines.append(
+            f"- slowest_trace_event: {case_id} / {summary['slowest_event']} / {summary['slowest_elapsed_ms']}ms"
+        )
+    else:
+        lines.append("- slowest_trace_event: none")
+    if missing_trace:
+        lines.append(f"- missing_trace_cases: {', '.join(missing_trace)}")
+    else:
+        lines.append("- missing_trace_cases: none")
+    if trace_failed:
+        lines.append(f"- failed_trace_event_cases: {', '.join(trace_failed)}")
+    else:
+        lines.append("- failed_trace_event_cases: none")
+
     lines.extend(["", "## Failures", ""])
     if failures:
         for result in failures:
+            summary = trace_summaries[result["id"]]
             lines.append(
-                f"- {result['id']}: {result['failure_category']} - {result.get('failure_reason') or ''}"
+                f"- {result['id']}: {result['failure_category']} - {result.get('failure_reason') or ''} "
+                f"(request_id={result.get('request_id')}, route={summary.get('route') or 'unknown'}, "
+                f"tool={summary.get('selected_tool') or 'unknown'}, "
+                f"slowest={summary.get('slowest_event') or 'unknown'})"
             )
     else:
         lines.append("- none")
@@ -605,6 +723,10 @@ def build_manual_answers(
             lines.append(f"  - {question}")
         lines.extend(
             [
+                "",
+                "### Trace Summary",
+                "",
+                *trace_summary_lines(result),
                 "",
                 "### Standard Answer / Review Key",
                 "",

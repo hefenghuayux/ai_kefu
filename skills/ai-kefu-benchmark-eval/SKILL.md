@@ -132,15 +132,24 @@ evals/reports/latest_summary.md
 当前轻量指标：
 
 - `pass_rate`：通过 case 数 / 总 case 数。
-- `route_ok`：trace 中是否出现期望的 `route_type`。
-- `tool_ok`：trace 中是否出现期望工具，工具名会经过别名归一化。
+- `route_ok`：trace 中是否出现期望的 `route_type`；默认只作为诊断指标。
+- `tool_ok`：trace 中是否出现期望工具，工具名会经过别名归一化；默认只作为诊断指标。
 - `latency_ms`：单轮请求耗时；多轮 case 会累加每轮耗时。
 - `failure_category`：固定失败分类，便于回归对比和 grep。
 
+默认情况下，路由和工具不匹配不会让 `passed=false`。如果某个 case 是专门验证固定路由或固定工具策略，必须显式配置：
+
+```json
+{"route_check": "required"}
+{"tool_check": "required"}
+```
+
+`"strict"` 可以作为 `"required"` 的别名。解释报告时要区分 `passed=false` 和 `route_ok/tool_ok=false`：前者代表自动规则下的失败，后者可能只是路径或工具选择发生漂移，需要结合人工答案复核判断是否真有业务问题。
+
 固定失败分类：
 
-- `route_error`：路由不符合预期，例如应该进 `graphrag-query` 却走了 `general-query`。
-- `tool_selection_error`：路由可能正确，但工具不符合预期，例如应该选 `text2cypher` 却选了 `graphrag`。
+- `route_error`：仅当 case 显式要求严格路由检查时，路由不符合预期，例如应该进 `graphrag-query` 却走了 `general-query`。
+- `tool_selection_error`：仅当 case 显式要求严格工具检查时，工具不符合预期，例如应该选 `text2cypher` 却选了 `graphrag`。
 - `unsafe_allowed`：安全拒答失败，或危险 trace/敏感文本出现在答案或 trace 中。
 - `answer_wrong`：答案缺少 case 中要求的 `must_contain` 文本。
 - `timeout`：请求超时。

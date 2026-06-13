@@ -551,3 +551,105 @@ params {'query': 'after_sale_policy', 'parameters': {}}
 statement MATCH (s:Shop)-[:HAS_POLICY]->(p:Policy) WHERE p.type = 'after_sale' RETURN s.name AS shopName, p.title AS title, p.content AS content
 records: []
 ts=2026-06-10T19:43:44.259 level=ERROR service=main event=stream_error request_id=eval-b681bb83-bd0c-5175-9097-c03723e6ee3c conversation_id=eval-memory-004 user_id=1 thread_id=eval-memory-004 reason='AdditionalGuardrailOutput' source=app.core.logger:log_event:280
+statement_name predefined_cypher
+params {'query': 'products_low_stock', 'parameters': {}}
+statement MATCH (p:Product)-[:SUPPLIED_BY]->(s:Supplier) RETURN p.ProductName, p.UnitsInStock, p.CategoryName, s.CompanyName AS SupplierName, s.Phone AS SupplierPhone ORDER BY toInteger(p.UnitsInStock) ASC LIMIT 10
+records: [{'p.ProductName': '华为 智能开关 Mini', 'p.UnitsInStock': '240', 'p.CategoryName': '智能开关', 'SupplierName': '华为智能生活', 'SupplierPhone': '14540897790'}, {'p.ProductName': '苹果 智能插座 Elite', 'p.UnitsInStock': '293', 'p.CategoryName': '智能插座', 'SupplierName': '苹果智能家庭', 'SupplierPhone': '13453362146'}, {'p.ProductName': '格力 智能空调 Standard', 'p.UnitsInStock': '309', 'p.CategoryName': '智能空调', 'SupplierName': '格力智能电器', 'SupplierPhone': '15227705540'}, {'p.ProductName': '亚马逊 智能开关 Lite', 'p.UnitsInStock': '333', 'p.CategoryName': '智能开关', 'SupplierName': '亚马逊智能科技', 'SupplierPhone': '13872781577'}, {'p.ProductName': '苹果 智能电视 Max', 'p.UnitsInStock': '479', 'p.CategoryName': '智能电视', 'SupplierName': '苹果智能家庭', 'SupplierPhone': '13453362146'}, {'p.ProductName': '博世 智能冰箱 Lite', 'p.UnitsInStock': '671', 'p.CategoryName': '智能冰箱', 'SupplierName': '博世智能系统', 'SupplierPhone': '15023399306'}, {'p.ProductName': '华为 智能门铃 Plus', 'p.UnitsInStock': '779', 'p.CategoryName': '智能门铃', 'SupplierName': '华为智能生活', 'SupplierPhone': '14540897790'}, {'p.ProductName': '谷歌 智能门铃 Basic', 'p.UnitsInStock': '849', 'p.CategoryName': '智能门铃', 'SupplierName': '谷歌智能设备', 'SupplierPhone': '14715114553'}, {'p.ProductName': '博世 智能加湿器 Plus', 'p.UnitsInStock': '957', 'p.CategoryName': '智能加湿器', 'SupplierName': '博世智能系统', 'SupplierPhone': '15023399306'}, {'p.ProductName': '索尼 智能马桶 Elite', 'p.UnitsInStock': '972', 'p.CategoryName': '智能马桶', 'SupplierName': '索尼智能科技', 'SupplierPhone': '15100584254'}]
+statement_name predefined_cypher
+params {'query': 'product_by_name', 'parameters': {'product_name': '谷歌 智能门铃 Basic'}}
+statement MATCH (p:Product) WHERE p.ProductName CONTAINS $product_name RETURN p.ProductName, p.UnitPrice, p.UnitsInStock, p.CategoryName
+records: [{'p.ProductName': '谷歌 智能门铃 Basic', 'p.UnitPrice': '3322.66', 'p.UnitsInStock': '849', 'p.CategoryName': '智能门铃'}]
+statement_name predefined_cypher
+params {'query': 'product_by_category', 'parameters': {'category_name': '智能门铃'}}
+statement MATCH (p:Product)-[:BELONGS_TO]->(c:Category) WHERE c.CategoryName = $category_name RETURN p.ProductName, p.UnitPrice, p.UnitsInStock
+records: [{'p.ProductName': '谷歌 智能门铃 Basic', 'p.UnitPrice': '3322.66', 'p.UnitsInStock': '849'}, {'p.ProductName': '华为 智能门铃 Plus', 'p.UnitPrice': '9128.31', 'p.UnitsInStock': '779'}]
+statement_name predefined_cypher
+params {'query': 'customer_by_name', 'parameters': {'customer_name': '海创网络有限公司'}}
+statement MATCH (c:Customer) WHERE c.CompanyName CONTAINS $customer_name RETURN c.CompanyName, c.ContactName, c.Phone, c.Country
+records: [{'c.CompanyName': '海创网络有限公司人工智能', 'c.ContactName': '文兰英', 'c.Phone': '15756296830', 'c.Country': '中国'}]
+statement_name predefined_cypher
+params {'query': 'product_sales', 'parameters': {'product_name': '谷歌 智能门铃 Basic'}}
+statement MATCH (o:Order)-[c:CONTAINS]->(p:Product) WHERE p.ProductName = $product_name RETURN sum(toFloat(c.Quantity) * toFloat(c.UnitPrice)) as TotalSales
+records: [{'TotalSales': 1386919.3699999999}]
+statement_name predefined_cypher
+params {'query': 'products_low_stock', 'parameters': {}}
+statement MATCH (p:Product)-[:SUPPLIED_BY]->(s:Supplier) RETURN p.ProductName, p.UnitsInStock, p.CategoryName, s.CompanyName AS SupplierName, s.Phone AS SupplierPhone ORDER BY toInteger(p.UnitsInStock) ASC LIMIT 10
+records: [{'p.ProductName': '华为 智能开关 Mini', 'p.UnitsInStock': '240', 'p.CategoryName': '智能开关', 'SupplierName': '华为智能生活', 'SupplierPhone': '14540897790'}, {'p.ProductName': '苹果 智能插座 Elite', 'p.UnitsInStock': '293', 'p.CategoryName': '智能插座', 'SupplierName': '苹果智能家庭', 'SupplierPhone': '13453362146'}, {'p.ProductName': '格力 智能空调 Standard', 'p.UnitsInStock': '309', 'p.CategoryName': '智能空调', 'SupplierName': '格力智能电器', 'SupplierPhone': '15227705540'}, {'p.ProductName': '亚马逊 智能开关 Lite', 'p.UnitsInStock': '333', 'p.CategoryName': '智能开关', 'SupplierName': '亚马逊智能科技', 'SupplierPhone': '13872781577'}, {'p.ProductName': '苹果 智能电视 Max', 'p.UnitsInStock': '479', 'p.CategoryName': '智能电视', 'SupplierName': '苹果智能家庭', 'SupplierPhone': '13453362146'}, {'p.ProductName': '博世 智能冰箱 Lite', 'p.UnitsInStock': '671', 'p.CategoryName': '智能冰箱', 'SupplierName': '博世智能系统', 'SupplierPhone': '15023399306'}, {'p.ProductName': '华为 智能门铃 Plus', 'p.UnitsInStock': '779', 'p.CategoryName': '智能门铃', 'SupplierName': '华为智能生活', 'SupplierPhone': '14540897790'}, {'p.ProductName': '谷歌 智能门铃 Basic', 'p.UnitsInStock': '849', 'p.CategoryName': '智能门铃', 'SupplierName': '谷歌智能设备', 'SupplierPhone': '14715114553'}, {'p.ProductName': '博世 智能加湿器 Plus', 'p.UnitsInStock': '957', 'p.CategoryName': '智能加湿器', 'SupplierName': '博世智能系统', 'SupplierPhone': '15023399306'}, {'p.ProductName': '索尼 智能马桶 Elite', 'p.UnitsInStock': '972', 'p.CategoryName': '智能马桶', 'SupplierName': '索尼智能科技', 'SupplierPhone': '15100584254'}]
+statement_name predefined_cypher
+params {'query': 'smart_speakers', 'parameters': {}}
+statement MATCH (p:Product)-[:BELONGS_TO]->(c:Category) WHERE c.CategoryName = '智能音箱' RETURN p.ProductName, p.UnitPrice, p.UnitsInStock
+records: []
+statement_name predefined_cypher
+params {'query': 'top_rated_products', 'parameters': {}}
+statement MATCH (p:Product)<-[:ABOUT]-(r:Review) WITH p.ProductName as ProductName, avg(toFloat(r.Rating)) as AvgRating, count(r) as ReviewCount WHERE ReviewCount > 3 RETURN ProductName, AvgRating, ReviewCount ORDER BY AvgRating DESC LIMIT 10
+records: [{'ProductName': '格力 智能空调 Standard', 'AvgRating': 3.3714285714285714, 'ReviewCount': 7}, {'ProductName': '索尼 智能马桶 Elite', 'AvgRating': 3.06, 'ReviewCount': 5}, {'ProductName': '博世 智能冰箱 Lite', 'AvgRating': 2.45, 'ReviewCount': 6}]
+statement_name predefined_cypher
+params {'query': 'category_product_count', 'parameters': {}}
+statement MATCH (c:Category)<-[:BELONGS_TO]-(p:Product) RETURN c.CategoryName, count(p) as ProductCount ORDER BY ProductCount DESC
+records: [{'c.CategoryName': '智能门铃', 'ProductCount': 2}, {'c.CategoryName': '智能开关', 'ProductCount': 2}, {'c.CategoryName': '智能冰箱', 'ProductCount': 1}, {'c.CategoryName': '智能电视', 'ProductCount': 1}, {'c.CategoryName': '智能空调', 'ProductCount': 1}, {'c.CategoryName': '智能插座', 'ProductCount': 1}, {'c.CategoryName': '智能马桶', 'ProductCount': 1}, {'c.CategoryName': '智能加湿器', 'ProductCount': 1}]
+statement_name predefined_cypher
+params {'query': 'products_low_stock', 'parameters': {}}
+statement MATCH (p:Product)-[:SUPPLIED_BY]->(s:Supplier) RETURN p.ProductName, p.UnitsInStock, p.CategoryName, s.CompanyName AS SupplierName, s.Phone AS SupplierPhone ORDER BY toInteger(p.UnitsInStock) ASC LIMIT 10
+records: [{'p.ProductName': '华为 智能开关 Mini', 'p.UnitsInStock': '240', 'p.CategoryName': '智能开关', 'SupplierName': '华为智能生活', 'SupplierPhone': '14540897790'}, {'p.ProductName': '苹果 智能插座 Elite', 'p.UnitsInStock': '293', 'p.CategoryName': '智能插座', 'SupplierName': '苹果智能家庭', 'SupplierPhone': '13453362146'}, {'p.ProductName': '格力 智能空调 Standard', 'p.UnitsInStock': '309', 'p.CategoryName': '智能空调', 'SupplierName': '格力智能电器', 'SupplierPhone': '15227705540'}, {'p.ProductName': '亚马逊 智能开关 Lite', 'p.UnitsInStock': '333', 'p.CategoryName': '智能开关', 'SupplierName': '亚马逊智能科技', 'SupplierPhone': '13872781577'}, {'p.ProductName': '苹果 智能电视 Max', 'p.UnitsInStock': '479', 'p.CategoryName': '智能电视', 'SupplierName': '苹果智能家庭', 'SupplierPhone': '13453362146'}, {'p.ProductName': '博世 智能冰箱 Lite', 'p.UnitsInStock': '671', 'p.CategoryName': '智能冰箱', 'SupplierName': '博世智能系统', 'SupplierPhone': '15023399306'}, {'p.ProductName': '华为 智能门铃 Plus', 'p.UnitsInStock': '779', 'p.CategoryName': '智能门铃', 'SupplierName': '华为智能生活', 'SupplierPhone': '14540897790'}, {'p.ProductName': '谷歌 智能门铃 Basic', 'p.UnitsInStock': '849', 'p.CategoryName': '智能门铃', 'SupplierName': '谷歌智能设备', 'SupplierPhone': '14715114553'}, {'p.ProductName': '博世 智能加湿器 Plus', 'p.UnitsInStock': '957', 'p.CategoryName': '智能加湿器', 'SupplierName': '博世智能系统', 'SupplierPhone': '15023399306'}, {'p.ProductName': '索尼 智能马桶 Elite', 'p.UnitsInStock': '972', 'p.CategoryName': '智能马桶', 'SupplierName': '索尼智能科技', 'SupplierPhone': '15100584254'}]
+statement_name predefined_cypher
+params {'query': 'recent_orders', 'parameters': {}}
+statement MATCH (o:Order) RETURN o.orderId, o.OrderDate, o.CustomerName ORDER BY o.OrderDate DESC LIMIT 10
+records: [{'o.orderId': '63', 'o.OrderDate': '2025-08-22 16:04:56', 'o.CustomerName': '海创网络有限公司人工智能'}, {'o.orderId': '33', 'o.OrderDate': '2025-08-13 01:59:48', 'o.CustomerName': '银嘉网络有限公司网络安全'}, {'o.orderId': '22', 'o.OrderDate': '2025-08-05 02:51:19', 'o.CustomerName': '创联世纪网络有限公司网络安全'}, {'o.orderId': '42', 'o.OrderDate': '2025-07-23 11:01:47', 'o.CustomerName': '时刻科技有限公司数字科技'}, {'o.orderId': '87', 'o.OrderDate': '2025-07-20 10:29:06', 'o.CustomerName': '四通传媒有限公司电子商务'}, {'o.orderId': '79', 'o.OrderDate': '2025-06-29 01:21:05', 'o.CustomerName': '海创网络有限公司人工智能'}, {'o.orderId': '14', 'o.OrderDate': '2025-06-23 01:27:00', 'o.CustomerName': '襄樊地球村网络有限公司网络安全'}, {'o.orderId': '39', 'o.OrderDate': '2025-06-04 04:36:43', 'o.CustomerName': '富罳科技有限公司网络安全'}, {'o.orderId': '16', 'o.OrderDate': '2025-05-30 05:05:09', 'o.CustomerName': '富罳科技有限公司网络安全'}, {'o.orderId': '60', 'o.OrderDate': '2025-05-29 19:05:08', 'o.CustomerName': '鸿睿思博科技有限公司信息技术'}]
+statement_name predefined_cypher
+params {'query': 'after_sale_policy', 'parameters': {}}
+statement MATCH (s:Shop)-[:HAS_POLICY]->(p:Policy) WHERE p.type = 'after_sale' RETURN s.name AS shopName, p.title AS title, p.content AS content
+records: []
+statement_name predefined_cypher
+params {'query': 'product_by_name', 'parameters': {'product_name': '谷歌 智能门铃 Basic'}}
+statement MATCH (p:Product) WHERE p.ProductName CONTAINS $product_name RETURN p.ProductName, p.UnitPrice, p.UnitsInStock, p.CategoryName
+records: [{'p.ProductName': '谷歌 智能门铃 Basic', 'p.UnitPrice': '3322.66', 'p.UnitsInStock': '849', 'p.CategoryName': '智能门铃'}]
+statement_name predefined_cypher
+params {'query': 'product_by_name', 'parameters': {'product_name': '苹果 智能插座 Elite'}}
+statement MATCH (p:Product) WHERE p.ProductName CONTAINS $product_name RETURN p.ProductName, p.UnitPrice, p.UnitsInStock, p.CategoryName
+records: [{'p.ProductName': '苹果 智能插座 Elite', 'p.UnitPrice': '8334.89', 'p.UnitsInStock': '293', 'p.CategoryName': '智能插座'}]
+statement_name predefined_cypher
+params {'query': 'product_by_name', 'parameters': {'product_name': '华为 智能门铃 Plus'}}
+statement MATCH (p:Product) WHERE p.ProductName CONTAINS $product_name RETURN p.ProductName, p.UnitPrice, p.UnitsInStock, p.CategoryName
+records: [{'p.ProductName': '华为 智能门铃 Plus', 'p.UnitPrice': '9128.31', 'p.UnitsInStock': '779', 'p.CategoryName': '智能门铃'}]
+statement_name predefined_cypher
+params {'query': 'product_by_category', 'parameters': {'category_name': '智能门铃'}}
+statement MATCH (p:Product)-[:BELONGS_TO]->(c:Category) WHERE c.CategoryName = $category_name RETURN p.ProductName, p.UnitPrice, p.UnitsInStock
+records: [{'p.ProductName': '谷歌 智能门铃 Basic', 'p.UnitPrice': '3322.66', 'p.UnitsInStock': '849'}, {'p.ProductName': '华为 智能门铃 Plus', 'p.UnitPrice': '9128.31', 'p.UnitsInStock': '779'}]
+statement_name predefined_cypher
+params {'query': 'product_by_category', 'parameters': {'category_name': '智能开关'}}
+statement MATCH (p:Product)-[:BELONGS_TO]->(c:Category) WHERE c.CategoryName = $category_name RETURN p.ProductName, p.UnitPrice, p.UnitsInStock
+records: [{'p.ProductName': '亚马逊 智能开关 Lite', 'p.UnitPrice': '568.12', 'p.UnitsInStock': '333'}, {'p.ProductName': '华为 智能开关 Mini', 'p.UnitPrice': '9633.66', 'p.UnitsInStock': '240'}]
+statement_name predefined_cypher
+params {'query': 'product_by_category', 'parameters': {'category_name': '智能空调'}}
+statement MATCH (p:Product)-[:BELONGS_TO]->(c:Category) WHERE c.CategoryName = $category_name RETURN p.ProductName, p.UnitPrice, p.UnitsInStock
+records: [{'p.ProductName': '格力 智能空调 Standard', 'p.UnitPrice': '5276.88', 'p.UnitsInStock': '309'}]
+statement_name predefined_cypher
+params {'query': 'category_product_count', 'parameters': {}}
+statement MATCH (c:Category)<-[:BELONGS_TO]-(p:Product) RETURN c.CategoryName, count(p) as ProductCount ORDER BY ProductCount DESC
+records: [{'c.CategoryName': '智能门铃', 'ProductCount': 2}, {'c.CategoryName': '智能开关', 'ProductCount': 2}, {'c.CategoryName': '智能冰箱', 'ProductCount': 1}, {'c.CategoryName': '智能电视', 'ProductCount': 1}, {'c.CategoryName': '智能空调', 'ProductCount': 1}, {'c.CategoryName': '智能插座', 'ProductCount': 1}, {'c.CategoryName': '智能马桶', 'ProductCount': 1}, {'c.CategoryName': '智能加湿器', 'ProductCount': 1}]
+statement_name predefined_cypher
+params {'query': 'supplier_products', 'parameters': {'$supplier_name': '华为智能生活'}}
+statement MATCH (s:Supplier)<-[:SUPPLIED_BY]-(p:Product) WHERE s.CompanyName = $supplier_name RETURN p.ProductName, p.UnitPrice, p.UnitsInStock
+ts=2026-06-10T19:54:57.305 level=ERROR service=main event=stream_error request_id=eval-50c156d0-7cd0-59d7-9757-6f5b0fe20df6 conversation_id=eval-supplier-001 user_id=1 thread_id=eval-supplier-001 reason="{code: Neo.ClientError.Statement.ParameterMissing} {message: Expected parameter(s): supplier_name}" source=app.core.logger:log_event:280
+statement_name predefined_cypher
+params {'query': 'product_by_supplier', 'parameters': {'$supplier_name': '苹果智能家庭'}}
+statement MATCH (p:Product)-[:SUPPLIED_BY]->(s:Supplier) WHERE s.CompanyName = $supplier_name RETURN p.ProductName, p.UnitPrice, p.UnitsInStock
+ts=2026-06-10T19:55:03.122 level=ERROR service=main event=stream_error request_id=eval-252b6abc-2d45-5f4f-9f1c-37f0697c1db5 conversation_id=eval-supplier-002 user_id=1 thread_id=eval-supplier-002 reason="{code: Neo.ClientError.Statement.ParameterMissing} {message: Expected parameter(s): supplier_name}" source=app.core.logger:log_event:280
+statement_name predefined_cypher
+params {'query': 'customer_by_name', 'parameters': {'customer_name': '海创网络有限公司人工智能'}}
+statement MATCH (c:Customer) WHERE c.CompanyName CONTAINS $customer_name RETURN c.CompanyName, c.ContactName, c.Phone, c.Country
+records: [{'c.CompanyName': '海创网络有限公司人工智能', 'c.ContactName': '文兰英', 'c.Phone': '15756296830', 'c.Country': '中国'}]
+statement_name predefined_cypher
+params {'query': 'customer_purchase_history', 'parameters': {'customer_name': '超艺传媒有限公司'}}
+statement MATCH (c:Customer)-[:PLACED]->(o:Order)-[:CONTAINS]->(p:Product) WHERE c.CompanyName = $customer_name RETURN p.ProductName, o.OrderDate, p.UnitPrice
+records: []
+ts=2026-06-10T19:55:31.145 level=ERROR service=customer_tools event=commerce_live_query_failed request_id=eval-b134522e-0197-5f1d-be70-0baf2c28e63a reason="Commerce API failed: status=500, payload=None" source=app.core.logger:log_event:280
+ts=2026-06-10T19:55:38.554 level=ERROR service=customer_tools event=commerce_live_query_failed request_id=eval-5228a860-1983-57a5-b4d1-0e1ea1956e97 reason="Commerce API failed: status=500, payload=None" source=app.core.logger:log_event:280
+statement_name predefined_cypher
+params {'query': 'delayed_orders', 'parameters': {}}
+statement MATCH (o:Order) WHERE o.RequiredDate < o.ShippedDate OR (o.RequiredDate < date() AND o.ShippedDate IS NULL) RETURN o.orderId, o.OrderDate, o.RequiredDate, o.ShippedDate, o.CustomerName
+records: [{'o.orderId': '57', 'o.OrderDate': '2024-06-18 20:58:33', 'o.RequiredDate': '2024-06-21 20:58:33', 'o.ShippedDate': '2024-06-23 20:58:33', 'o.CustomerName': '明腾网络有限公司金融科技'}, {'o.orderId': '46', 'o.OrderDate': '2024-01-31 20:02:27', 'o.RequiredDate': '2024-02-04 20:02:27', 'o.ShippedDate': '2024-02-05 20:02:27', 'o.CustomerName': '创联世纪网络有限公司网络安全'}, {'o.orderId': '68', 'o.OrderDate': '2024-12-01 17:23:42', 'o.RequiredDate': '2024-12-05 17:23:42', 'o.ShippedDate': '2024-12-06 17:23:42', 'o.CustomerName': '创联世纪网络有限公司网络安全'}, {'o.orderId': '50', 'o.OrderDate': '2023-09-20 21:12:08', 'o.RequiredDate': '2023-09-23 21:12:08', 'o.ShippedDate': '2023-09-25 21:12:08', 'o.CustomerName': '超艺传媒有限公司大数据分析'}, {'o.orderId': '1', 'o.OrderDate': '2024-04-06 20:42:41', 'o.RequiredDate': '2024-04-09 20:42:41', 'o.ShippedDate': '2024-04-11 20:42:41', 'o.CustomerName': '思优信息有限公司信息技术'}]
+statement_name predefined_cypher
+params {'query': 'employee_processed_orders', 'parameters': {'$employee_name': '凤英 孙'}}
+statement MATCH (e:Employee)-[:PROCESSED]->(o:Order) WHERE e.FirstName + ' ' + e.LastName = $employee_name RETURN o.orderId, o.OrderDate, o.CustomerName
+ts=2026-06-10T19:55:55.803 level=ERROR service=main event=stream_error request_id=eval-63041711-eaf7-59b7-8806-53ded09e8a1e conversation_id=eval-employee-001 user_id=1 thread_id=eval-employee-001 reason="{code: Neo.ClientError.Statement.ParameterMissing} {message: Expected parameter(s): employee_name}" source=app.core.logger:log_event:280

@@ -9,8 +9,11 @@ from langchain_core.output_parsers import StrOutputParser
 
 from app.lg_agent.kg_sub_graph.agentic_rag_agents.components.state import OverallState
 from app.lg_agent.kg_sub_graph.agentic_rag_agents.components.summarize.prompts import create_summarization_prompt_template
+from app.core.logger import get_logger, log_event
+import time
 
 generate_summary_prompt = create_summarization_prompt_template()
+logger = get_logger(service="summarize_node")
 
 
 def create_summarization_node(
@@ -36,6 +39,7 @@ def create_summarization_node(
         """
         Summarize results of the performed Cypher queries.
         """
+        started = time.perf_counter()
         results = []
         
         # 使用直接属性访问而不是get方法
@@ -48,16 +52,48 @@ def create_summarization_node(
                 results.append(cypher.records)
                 
         if results:
-            summary = await generate_summary.ainvoke(
-                {
-                    "question": state.get("question"),
-                    "results": results,
-                }
-            )
+            try:
+                summary = await generate_summary.ainvoke(
+                    {
+                        "question": state.get("question"),
+                        "results": results,
+                    }
+                )
+            except Exception as e:
+                log_event(
+                    logger,
+                    "ERROR",
+                    "node_finished",
+                    phase="summarize",
+                    node="summarize",
+                    status="failed",
+                    elapsed_ms=round((time.perf_counter() - started) * 1000),
+                    input_query_len=len(state.get("question", "") or ""),
+                    result_count=len(results),
+                    error_type=e.__class__.__name__,
+                    reason=str(e),
+                    exception=True,
+                )
+                raise
 
         else:
             summary = "No data to summarize."
 
+        log_event(
+            logger,
+            "INFO",
+            "node_finished",
+            phase="summarize",
+            node="summarize",
+            status="success",
+            elapsed_ms=round((time.perf_counter() - started) * 1000),
+            input_query_len=len(state.get("question", "") or ""),
+            result_count=len(results),
+            result_summary_len=len(summary),
+            output_len=len(summary),
+            llm_output_len=len(summary),
+            llm_output_preview=summary[:500],
+        )
         return {"summary": summary, "steps": ["summarize"]}
 
     return summarize

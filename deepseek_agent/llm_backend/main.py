@@ -35,6 +35,7 @@ from app.lg_agent.utils import new_uuid
 from app.lg_agent.lg_builder import graph
 from langgraph.types import Command
 import json
+import time
 
 
 # 配置上传目录 - RAG 功能的
@@ -131,9 +132,9 @@ def _debug_trace_sse(request_id: str, conversation_id: Optional[str], thread_id:
 async def health_check():
     return {"status": "ok"}
 
-@app.post("/api/chat")
+@app.post("/api/chat", deprecated=True)
 async def chat_endpoint(request: ChatMessage):
-    """聊天接口"""
+    """聊天接口（已废弃，主聊天入口应使用 /api/langgraph/query）"""
     try:
         log_event(
             logger,
@@ -409,7 +410,10 @@ async def langgraph_query(
             request_logger,
             "INFO",
             "langgraph_started",
+            phase="request",
+            status="started",
             query_len=len(query),
+            input_query_len=len(query),
             has_image=image is not None,
         )
         
@@ -439,8 +443,9 @@ async def langgraph_query(
                 size=len(content),
             )
         
-        # 使用conversation_id作为thread_id，如果没有提供则创建新的
-        thread_id = conversation_id if conversation_id else new_uuid()
+        # 使用conversation_id作为thread_id，如果没有提供则创建新的。
+        # JSON 请求可能传入数字 ID，响应头和 LangGraph thread_id 都按字符串处理。
+        thread_id = str(conversation_id) if conversation_id is not None else new_uuid()
         thread_config = {
             "configurable": {
                 "thread_id": thread_id, 
@@ -472,6 +477,7 @@ async def langgraph_query(
         if has_interrupt:
             log_event(request_logger, "INFO", "stream_started", mode="resume_interrupted")
             async def process_stream():
+                stream_started = time.perf_counter()
                 if debug_trace:
                     start_trace()
                 try:
@@ -485,15 +491,43 @@ async def langgraph_query(
                         request_logger,
                         "INFO",
                         "stream_finished",
+                        phase="request",
+                        status="success",
                         mode="resume_interrupted",
+                        elapsed_ms=round((time.perf_counter() - stream_started) * 1000),
                         message_count=len(messages),
                         content_len=len(final_message),
+                        output_len=len(final_message),
                     )
                     if final_message:
+                        if conversation_id and str(conversation_id).isdigit():
+                            await ConversationService.save_message(
+                                user_id=user_id,
+                                conversation_id=int(conversation_id),
+                                messages=[{"role": "user", "content": query}],
+                                response=final_message,
+                            )
+                        elif conversation_id:
+                            log_event(
+                                request_logger,
+                                "WARNING",
+                                "conversation_persist_skipped",
+                                reason="conversation_id is not a MySQL integer id",
+                            )
                         content_json = json.dumps(final_message, ensure_ascii=False)
                         yield f"data: {content_json}\n\n"
                 except Exception as e:
-                    log_event(request_logger, "ERROR", "stream_error", reason=str(e), exception=True)
+                    log_event(
+                        request_logger,
+                        "ERROR",
+                        "stream_error",
+                        phase="request",
+                        status="failed",
+                        elapsed_ms=round((time.perf_counter() - stream_started) * 1000),
+                        error_type=e.__class__.__name__,
+                        reason=str(e),
+                        exception=True,
+                    )
                     error_json = json.dumps({"type": "error", "message": str(e)}, ensure_ascii=False)
                     yield f"data: {error_json}\n\n"
                         
@@ -514,10 +548,11 @@ async def langgraph_query(
             
             # 流式处理查询
             async def process_stream():
+                stream_started = time.perf_counter()
                 if debug_trace:
                     start_trace()
                 try:
-                    log_event(request_logger, "INFO", "stream_started", mode="new_input")
+                    log_event(request_logger, "INFO", "stream_started", phase="request", status="started", mode="new_input")
                     result = await graph.ainvoke(
                         input=input_state,
                         config=thread_config
@@ -528,15 +563,43 @@ async def langgraph_query(
                         request_logger,
                         "INFO",
                         "stream_finished",
+                        phase="request",
+                        status="success",
                         mode="new_input",
+                        elapsed_ms=round((time.perf_counter() - stream_started) * 1000),
                         message_count=len(messages),
                         content_len=len(final_message),
+                        output_len=len(final_message),
                     )
                     if final_message:
+                        if conversation_id and str(conversation_id).isdigit():
+                            await ConversationService.save_message(
+                                user_id=user_id,
+                                conversation_id=int(conversation_id),
+                                messages=[{"role": "user", "content": query}],
+                                response=final_message,
+                            )
+                        elif conversation_id:
+                            log_event(
+                                request_logger,
+                                "WARNING",
+                                "conversation_persist_skipped",
+                                reason="conversation_id is not a MySQL integer id",
+                            )
                         content_json = json.dumps(final_message, ensure_ascii=False)
                         yield f"data: {content_json}\n\n"
                 except Exception as e:
-                    log_event(request_logger, "ERROR", "stream_error", reason=str(e), exception=True)
+                    log_event(
+                        request_logger,
+                        "ERROR",
+                        "stream_error",
+                        phase="request",
+                        status="failed",
+                        elapsed_ms=round((time.perf_counter() - stream_started) * 1000),
+                        error_type=e.__class__.__name__,
+                        reason=str(e),
+                        exception=True,
+                    )
                     error_json = json.dumps({"type": "error", "message": str(e)}, ensure_ascii=False)
                     yield f"data: {error_json}\n\n"
                         
@@ -555,7 +618,7 @@ async def langgraph_query(
         )
         
         # 添加会话ID到响应头，方便前端获取
-        response.headers["X-Conversation-ID"] = thread_id
+        response.headers["X-Conversation-ID"] = str(thread_id)
         
         return response
         
@@ -584,10 +647,11 @@ async def langgraph_resume(http_request: Request, request: LangGraphResumeReques
         
         # 流式处理恢复
         async def process_resume():
+            stream_started = time.perf_counter()
             if debug_trace:
                 start_trace()
             try:
-                log_event(request_logger, "INFO", "stream_started", mode="resume")
+                log_event(request_logger, "INFO", "stream_started", phase="request", status="started", mode="resume")
                 async for c, metadata in graph.astream(Command(resume=request.query), stream_mode="messages", config=thread_config):
                     # 只处理最终展示给用户的内容
                     if c.content and not c.additional_kwargs.get("tool_calls"):
@@ -599,9 +663,27 @@ async def langgraph_resume(http_request: Request, request: LangGraphResumeReques
                     elif c.additional_kwargs.get("tool_calls"):
                         tool_data = c.additional_kwargs.get("tool_calls")[0]["function"].get("arguments")
                         log_event(request_logger, "DEBUG", "tool_called", tool_args_len=len(tool_data or ""))
-                log_event(request_logger, "INFO", "stream_finished", mode="resume")
+                log_event(
+                    request_logger,
+                    "INFO",
+                    "stream_finished",
+                    phase="request",
+                    status="success",
+                    mode="resume",
+                    elapsed_ms=round((time.perf_counter() - stream_started) * 1000),
+                )
             except Exception as e:
-                log_event(request_logger, "ERROR", "stream_error", reason=str(e), exception=True)
+                log_event(
+                    request_logger,
+                    "ERROR",
+                    "stream_error",
+                    phase="request",
+                    status="failed",
+                    elapsed_ms=round((time.perf_counter() - stream_started) * 1000),
+                    error_type=e.__class__.__name__,
+                    reason=str(e),
+                    exception=True,
+                )
                 error_json = json.dumps({"type": "error", "message": str(e)}, ensure_ascii=False)
                 yield f"data: {error_json}\n\n"
             finally:

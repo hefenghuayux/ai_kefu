@@ -4,6 +4,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 from app.core.logger import get_logger, log_event
 from app.services.commerce_client import CommerceApiClient
+import time
 
 # 导入配置
 from app.core.config import settings
@@ -195,13 +196,27 @@ def create_graphrag_query_node(
         """
         执行GraphRAG查询并返回结果。
         """
+        started = time.perf_counter()
         errors = list()
         search_result = {}
         query_name = state.get("query_name", "")
         query_parameters = state.get("query_parameters", {})
+        task = state.get("task", "")
+        log_event(
+            logger,
+            "INFO",
+            "node_started",
+            phase="tool_execution",
+            node="customer_tools",
+            tool=query_name or "graphrag",
+            status="started",
+            input_query_len=len(task),
+            task_len=len(task),
+        )
         if query_name == "commerce_live_query":
             try:
                 client = CommerceApiClient()
+                live_started = time.perf_counter()
                 search_result = await client.live_query(
                     action=query_parameters.get("action"),
                     order_id=query_parameters.get("order_id"),
@@ -212,12 +227,45 @@ def create_graphrag_query_node(
                     logger,
                     "INFO",
                     "commerce_live_query_finished",
+                    phase="tool_execution",
+                    node="customer_tools",
+                    tool="commerce_live_query",
+                    status="success",
+                    elapsed_ms=round((time.perf_counter() - live_started) * 1000),
                     action=query_parameters.get("action"),
                     success=search_result.get("success"),
+                    result_count=1 if search_result else 0,
+                    rows=1 if search_result else 0,
+                    result_summary_len=len(str(search_result)),
                 )
             except Exception as e:
                 errors.append(f"Commerce实时查询失败: {str(e)}")
-                log_event(logger, "ERROR", "commerce_live_query_failed", reason=str(e), exception=True)
+                log_event(
+                    logger,
+                    "ERROR",
+                    "commerce_live_query_failed",
+                    phase="tool_execution",
+                    node="customer_tools",
+                    tool="commerce_live_query",
+                    status="failed",
+                    elapsed_ms=round((time.perf_counter() - started) * 1000),
+                    error_type=e.__class__.__name__,
+                    reason=str(e),
+                    exception=True,
+                )
+            log_event(
+                logger,
+                "INFO",
+                "node_finished",
+                phase="tool_execution",
+                node="customer_tools",
+                tool="commerce_live_query",
+                status="success" if not errors else "failed",
+                elapsed_ms=round((time.perf_counter() - started) * 1000),
+                result_count=1 if search_result else 0,
+                rows=1 if search_result else 0,
+                result_summary_len=len(str(search_result)),
+            )
 
             return {
                 "cyphers": [
@@ -248,6 +296,40 @@ def create_graphrag_query_node(
                 search_result = await graphrag_api.query_graphrag(query)
             except Exception as e:
                 errors.append(f"GraphRAG查询失败: {str(e)}")
+                log_event(
+                    logger,
+                    "ERROR",
+                    "graphrag_query_finished",
+                    phase="tool_execution",
+                    node="customer_tools",
+                    tool="graphrag",
+                    status="failed",
+                    elapsed_ms=round((time.perf_counter() - started) * 1000),
+                    input_query_len=len(query),
+                    error_type=e.__class__.__name__,
+                    reason=str(e),
+                    exception=True,
+                )
+
+        response_text = str(search_result.get("response") or "")
+        log_event(
+            logger,
+            "INFO",
+            "graphrag_query_finished",
+            phase="tool_execution",
+            node="customer_tools",
+            tool="graphrag",
+            status="success" if not errors else "failed",
+            elapsed_ms=round((time.perf_counter() - started) * 1000),
+            input_query_len=len(query),
+            task_len=len(query),
+            result_count=1 if search_result else 0,
+            rows=1 if search_result else 0,
+            result_summary_len=len(response_text),
+            llm_output_len=len(response_text),
+            llm_output_preview=response_text[:500],
+            reason="; ".join(errors) if errors else None,
+        )
   
         return {
             "cyphers": [

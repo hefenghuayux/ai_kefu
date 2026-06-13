@@ -18,6 +18,7 @@ from langchain_core.runnables.base import Runnable
 from langgraph.types import Command, Send
 from pydantic import BaseModel
 from app.core.logger import get_logger, log_event
+import time
 
 
 from app.lg_agent.kg_sub_graph.agentic_rag_agents.components.state import ToolSelectionInputState
@@ -68,26 +69,50 @@ def create_tool_selection_node(
         """
         Choose the appropriate tool for the given task.
         """
+        started = time.perf_counter()
+        question = state.get("question", "")
         try:
             # 调用工具选择链，生成针对每个任务要调用的工具名称和参数
             tool_selection_output: BaseModel = await tool_selection_chain.ainvoke(
-                {"question": state.get("question", "")}
+                {"question": question}
             )
         except Exception as e:
-            log_event(logger, "ERROR", "tool_selection_failed", reason=str(e), exception=True)
+            log_event(
+                logger,
+                "ERROR",
+                "tool_selection_failed",
+                phase="tool_selection",
+                node="tool_selection",
+                status="failed",
+                elapsed_ms=round((time.perf_counter() - started) * 1000),
+                task_len=len(question),
+                input_query_len=len(question),
+                error_type=e.__class__.__name__,
+                reason=str(e),
+                exception=True,
+            )
             raise
 
         # 根据路由到对应的工具节点
         if tool_selection_output is not None:
             tool_name: str = tool_selection_output.model_json_schema().get("title", "")
             tool_args: Dict[str, Any] = tool_selection_output.model_dump() 
+            output_preview = str(tool_args)[:500]
             log_event(
                 logger,
                 "INFO",
                 "tool_selection_finished",
+                phase="tool_selection",
                 node="tool_selection",
+                status="success",
                 tool=tool_name,
-                task_len=len(state.get("question", "")),
+                selected_tool=tool_name,
+                task_len=len(question),
+                input_query_len=len(question),
+                elapsed_ms=round((time.perf_counter() - started) * 1000),
+                llm_output_len=len(str(tool_args)),
+                llm_output_preview=output_preview,
+                selection_reason_len=0,
             )
             if tool_name == "predefined_cypher":
                 return Command(
@@ -136,10 +161,17 @@ def create_tool_selection_node(
                 logger,
                 "INFO",
                 "tool_selection_finished",
+                phase="tool_selection",
                 node="tool_selection",
+                status="success",
                 tool="cypher_query",
+                selected_tool="cypher_query",
                 task_len=len(question),
+                input_query_len=len(question),
+                elapsed_ms=round((time.perf_counter() - started) * 1000),
                 defaulted=True,
+                selection_reason_preview="LLM returned no tool call; defaulted to cypher_query",
+                selection_reason_len=len("LLM returned no tool call; defaulted to cypher_query"),
             )
             return Command(
                 goto=Send(
@@ -159,9 +191,15 @@ def create_tool_selection_node(
                 logger,
                 "WARNING",
                 "tool_selection_finished",
+                phase="tool_selection",
                 node="tool_selection",
+                status="failed",
                 tool="none",
+                selected_tool="none",
                 task_len=len(state.get("question", "")),
+                input_query_len=len(state.get("question", "")),
+                elapsed_ms=round((time.perf_counter() - started) * 1000),
+                reason="no tool selected",
             )
             return Command(
                 goto=Send(

@@ -13,6 +13,7 @@ from app.lg_agent.kg_sub_graph.agentic_rag_agents.components.guardrails.models i
 from app.lg_agent.kg_sub_graph.agentic_rag_agents.components.guardrails.prompts import create_guardrails_prompt_template
 from app.lg_agent.kg_sub_graph.agentic_rag_agents.components.state import InputState
 from app.core.logger import get_logger, log_event
+import time
 
 # 获取日志记录器
 logger = get_logger(service="guardrails_node")
@@ -55,14 +56,31 @@ def create_guardrails_node(
         """
         Decides if the question is in scope.
         """
+        started = time.perf_counter()
 
         # 提取到输入的问题
         question = state.get("question", "")
 
         # 使用LLM进行结构化输出
-        guardrails_output: GuardrailsOutput = await guardrails_chain.ainvoke(
-            {"question": question}
-        )
+        try:
+            guardrails_output: GuardrailsOutput = await guardrails_chain.ainvoke(
+                {"question": question}
+            )
+        except Exception as e:
+            log_event(
+                logger,
+                "ERROR",
+                "guardrails_finished",
+                phase="guardrails",
+                node="guardrails",
+                status="failed",
+                elapsed_ms=round((time.perf_counter() - started) * 1000),
+                input_query_len=len(question),
+                error_type=e.__class__.__name__,
+                reason=str(e),
+                exception=True,
+            )
+            raise
         
         summary = None
 
@@ -79,15 +97,25 @@ def create_guardrails_node(
             logger,
             "INFO",
             "safety_decision",
+            phase="guardrails",
             node="guardrails",
+            status="success",
             decision="reject" if guardrails_output.decision == "end" else "allow",
+            elapsed_ms=round((time.perf_counter() - started) * 1000),
+            input_query_len=len(question),
+            llm_output_len=len(guardrails_output.decision),
+            llm_output_preview=guardrails_output.decision,
         )
         log_event(
             logger,
             "INFO",
             "guardrails_finished",
+            phase="guardrails",
             node="guardrails",
+            status="success",
             decision=guardrails_output.decision,
+            elapsed_ms=round((time.perf_counter() - started) * 1000),
+            output_len=len(summary or ""),
         )
 
         return decision_info

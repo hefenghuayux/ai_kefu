@@ -7,6 +7,7 @@ from langchain_deepseek import ChatDeepSeek
 from app.core.config import settings, ServiceType
 from app.lg_agent.kg_sub_graph.agentic_rag_agents.retrievers.cypher_examples.northwind_retriever import NorthwindCypherRetriever
 from app.lg_agent.kg_sub_graph.agentic_rag_agents.components.cypher_tools.utils import create_text2cypher_generation_node, create_text2cypher_validation_node, create_text2cypher_execution_node
+import time
 
 
 
@@ -49,28 +50,71 @@ def create_cypher_query_node(
         """
         执行Text2Cypher查询并返回结果。
         """
+        started = time.perf_counter()
         errors = list()
         # 获取查询文本
         query = state.get("task", "")
         node_logger = logger.bind(node="cypher_query")
-        log_event(node_logger, "INFO", "node_started", query_len=len(query))
+        log_event(
+            node_logger,
+            "INFO",
+            "node_started",
+            phase="tool_execution",
+            tool="text2cypher",
+            status="started",
+            query_len=len(query),
+            input_query_len=len(query),
+            task_len=len(query),
+        )
         if not query:
             errors.append("未提供查询文本")
  
         # 使用大模型执行查询/多跳/并行查询计划
         # 1. 根据.env文件中AGENT_SERVICE的设置，选择使用DeepSeek或Ollama启动的模型服务
         if settings.AGENT_SERVICE == ServiceType.DEEPSEEK:
+            model_name = settings.DEEPSEEK_MODEL
             model = ChatDeepSeek(api_key=settings.DEEPSEEK_API_KEY, model_name=settings.DEEPSEEK_MODEL, temperature=0.7, tags=["research_plan"])
         else:
+            model_name = settings.OLLAMA_AGENT_MODEL
             model = ChatOllama(model=settings.OLLAMA_AGENT_MODEL, base_url=settings.OLLAMA_BASE_URL, temperature=0.7, tags=["research_plan"])
+        log_event(
+            node_logger,
+            "INFO",
+            "model_called",
+            phase="tool_execution",
+            tool="text2cypher",
+            status="started",
+            model=model_name,
+        )
 
         # 2. 获取Neo4j图数据库连接
         try:
-            log_event(node_logger, "INFO", "neo4j_query_started", operation="connect")
+            connect_started = time.perf_counter()
+            log_event(node_logger, "INFO", "neo4j_query_started", phase="tool_execution", tool="text2cypher", status="started", operation="connect")
             neo4j_graph = get_neo4j_graph()
-            log_event(node_logger, "INFO", "neo4j_query_finished", operation="connect")
+            log_event(
+                node_logger,
+                "INFO",
+                "neo4j_query_finished",
+                phase="tool_execution",
+                tool="text2cypher",
+                status="success",
+                operation="connect",
+                elapsed_ms=round((time.perf_counter() - connect_started) * 1000),
+            )
         except Exception as e:
-            log_event(node_logger, "ERROR", "neo4j_query_failed", operation="connect", reason=str(e), exception=True)
+            log_event(
+                node_logger,
+                "ERROR",
+                "neo4j_query_failed",
+                phase="tool_execution",
+                tool="text2cypher",
+                status="failed",
+                operation="connect",
+                error_type=e.__class__.__name__,
+                reason=str(e),
+                exception=True,
+            )
 
         # step 2. 创建自定义检索器实例，根据 Graph Schema 创建 Cypher 示例，用来引导大模型生成正确的Cypher 查询语句
         cypher_retriever = NorthwindCypherRetriever()
@@ -80,8 +124,37 @@ def create_cypher_query_node(
             llm=model, graph=neo4j_graph, cypher_example_retriever=cypher_retriever
         )
 
-        cypher_result = await cypher_generation(state)
-        log_event(node_logger, "INFO", "cypher_generated", cypher_len=len(str(cypher_result)))
+        generation_started = time.perf_counter()
+        try:
+            cypher_result = await cypher_generation(state)
+        except Exception as e:
+            log_event(
+                node_logger,
+                "ERROR",
+                "cypher_generated",
+                phase="tool_execution",
+                tool="text2cypher",
+                status="failed",
+                elapsed_ms=round((time.perf_counter() - generation_started) * 1000),
+                error_type=e.__class__.__name__,
+                reason=str(e),
+                exception=True,
+            )
+            raise
+        generated_statement = cypher_result.get("statement", "") if isinstance(cypher_result, dict) else str(cypher_result)
+        log_event(
+            node_logger,
+            "INFO",
+            "cypher_generated",
+            phase="tool_execution",
+            tool="text2cypher",
+            status="success",
+            elapsed_ms=round((time.perf_counter() - generation_started) * 1000),
+            cypher_len=len(generated_statement),
+            cypher_preview=generated_statement[:500],
+            llm_output_len=len(generated_statement),
+            llm_output_preview=generated_statement[:500],
+        )
         #  TODO: Example 1. 直接使用大模型生成 Cypher 查询语句
         """
         # 安装依赖
@@ -135,27 +208,106 @@ def create_cypher_query_node(
         )
 
         # step 5. 获取执行Cypher查询的全部信息
-        execute_info = await validate_cypher(state=state)
-        log_event(node_logger, "INFO", "cypher_validated", cypher_len=len(str(execute_info)))
+        validation_started = time.perf_counter()
+        try:
+            execute_info = await validate_cypher(state=state)
+        except Exception as e:
+            log_event(
+                node_logger,
+                "ERROR",
+                "cypher_validated",
+                phase="tool_execution",
+                tool="text2cypher",
+                status="failed",
+                elapsed_ms=round((time.perf_counter() - validation_started) * 1000),
+                error_type=e.__class__.__name__,
+                reason=str(e),
+                exception=True,
+            )
+            raise
+        validated_statement = execute_info.get("statement", "") if isinstance(execute_info, dict) else str(execute_info)
+        log_event(
+            node_logger,
+            "INFO",
+            "cypher_validated",
+            phase="tool_execution",
+            tool="text2cypher",
+            status="success",
+            elapsed_ms=round((time.perf_counter() - validation_started) * 1000),
+            cypher_len=len(validated_statement),
+            cypher_preview=validated_statement[:500],
+        )
 
         # step 6. 执行 Cypher 查询语句
         execute_cypher = create_text2cypher_execution_node(
             graph=neo4j_graph, cypher=execute_info
         )
 
-        log_event(node_logger, "INFO", "neo4j_query_started", operation="execute_cypher")
-        final_result = await execute_cypher(state)
+        query_started = time.perf_counter()
+        log_event(
+            node_logger,
+            "INFO",
+            "neo4j_query_started",
+            phase="tool_execution",
+            tool="text2cypher",
+            status="started",
+            operation="execute_cypher",
+            cypher_len=len(validated_statement),
+            cypher_preview=validated_statement[:500],
+        )
+        try:
+            final_result = await execute_cypher(state)
+        except Exception as e:
+            log_event(
+                node_logger,
+                "ERROR",
+                "neo4j_query_finished",
+                phase="tool_execution",
+                tool="text2cypher",
+                status="failed",
+                operation="execute_cypher",
+                elapsed_ms=round((time.perf_counter() - query_started) * 1000),
+                cypher_len=len(validated_statement),
+                cypher_preview=validated_statement[:500],
+                error_type=e.__class__.__name__,
+                reason=str(e),
+                exception=True,
+            )
+            raise
         result_count = len(final_result.get("cyphers", [])) if isinstance(final_result, dict) else 0
+        records = final_result["cyphers"][0]["records"] if final_result.get("cyphers") and len(final_result["cyphers"]) > 0 else []
+        rows = len(records) if isinstance(records, list) else len(records.get("result", [])) if isinstance(records, dict) and isinstance(records.get("result"), list) else result_count
         log_event(
             node_logger,
             "INFO",
             "neo4j_query_finished",
+            phase="tool_execution",
+            tool="text2cypher",
+            status="success",
             operation="execute_cypher",
+            elapsed_ms=round((time.perf_counter() - query_started) * 1000),
             result_count=result_count,
+            rows=rows,
+            result_summary_len=len(str(records)),
         )
 
         # 封装 单次子任务执行的 输出结果并通过Pydantic模型限定格式
-        log_event(node_logger, "INFO", "node_finished", result_count=result_count)
+        log_event(
+            node_logger,
+            "INFO",
+            "node_finished",
+            phase="tool_execution",
+            tool="text2cypher",
+            status="success",
+            elapsed_ms=round((time.perf_counter() - started) * 1000),
+            input_query_len=len(query),
+            task_len=len(query),
+            cypher_len=len(validated_statement),
+            cypher_preview=validated_statement[:500],
+            result_count=result_count,
+            rows=rows,
+            result_summary_len=len(str(records)),
+        )
         return {
             "cyphers": [
                 CypherQueryOutputState(

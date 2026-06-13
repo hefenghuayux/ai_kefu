@@ -1,0 +1,2 @@
+ts=2026-06-13T15:36:48.463 level=INFO service=main event=langgraph_started request_id=cd6554cf-26a7-4358-b432-bfede782fee9 conversation_id=123 user_id=1 status=started has_image=false input_query_len=16 phase=request query_len=16 source=app.core.logger:log_event:280
+ts=2026-06-13T15:36:48.463 level=INFO service=main event=conversation_state_created request_id=cd6554cf-26a7-4358-b432-bfede782fee9 conversation_id=123 user_id=1 thread_id=123 source=app.core.logger:log_event:280

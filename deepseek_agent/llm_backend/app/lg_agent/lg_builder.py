@@ -78,33 +78,73 @@ async def analyze_and_route_query(
         dict[str, Router]: A dictionary containing the 'router' key with the classification result (classification type and logic).
     """
     # 选择模型实例，通过.env文件中的AGENT_SERVICE参数选择
+    started = time.perf_counter()
     node_logger = logger.bind(**_config_log_fields(config), node="analyze_and_route_query")
-    log_event(node_logger, "INFO", "node_started", message_count=len(state.messages))
+    last_message = state.messages[-1].content if state.messages else ""
+    log_event(
+        node_logger,
+        "INFO",
+        "node_started",
+        phase="router",
+        status="started",
+        message_count=len(state.messages),
+        input_message_count=len(state.messages),
+        input_query_len=len(last_message),
+    )
     if settings.AGENT_SERVICE == ServiceType.DEEPSEEK:
+        model_name = settings.DEEPSEEK_MODEL
         model = ChatDeepSeek(api_key=settings.DEEPSEEK_API_KEY, model_name=settings.DEEPSEEK_MODEL, temperature=0.7, tags=["router"])
-        log_event(node_logger, "INFO", "model_called", model=settings.DEEPSEEK_MODEL)
     else:
+        model_name = settings.OLLAMA_AGENT_MODEL
         model = ChatOllama(model=settings.OLLAMA_AGENT_MODEL, base_url=settings.OLLAMA_BASE_URL, temperature=0.7, tags=["router"])
-        log_event(node_logger, "INFO", "model_called", model=settings.OLLAMA_AGENT_MODEL)
+    log_event(node_logger, "INFO", "model_called", phase="router", status="started", model=model_name)
 
     # 拼接提示模版 + 用户的实时问题（包含历史上下文对话） 
     messages = [
         {"role": "system", "content": ROUTER_SYSTEM_PROMPT}
     ] + state.messages
-    log_event(node_logger, "INFO", "router_analysis_started", message_count=len(state.messages))
-    
-    # 使用结构化输出，输出问题类型
-    response = cast(
-        Router, await model.with_structured_output(Router).ainvoke(messages)
-    )
     log_event(
         node_logger,
         "INFO",
-        "node_finished",
-        route_type=response["type"],
-        logic_len=len(response["logic"]),
+        "router_analysis_started",
+        phase="router",
+        status="started",
+        message_count=len(state.messages),
+        input_message_count=len(state.messages),
     )
-    return {"router": response}
+    
+    # 使用结构化输出，输出问题类型
+    try:
+        response = cast(
+            Router, await model.with_structured_output(Router).ainvoke(messages)
+        )
+        logic = response["logic"]
+        log_event(
+            node_logger,
+            "INFO",
+            "node_finished",
+            phase="router",
+            status="success",
+            elapsed_ms=round((time.perf_counter() - started) * 1000),
+            route_type=response["type"],
+            logic_len=len(logic),
+            llm_output_len=len(str(response)),
+            llm_output_preview=str({"type": response["type"], "logic": logic[:300]})[:500],
+        )
+        return {"router": response}
+    except Exception as e:
+        log_event(
+            node_logger,
+            "ERROR",
+            "node_finished",
+            phase="router",
+            status="failed",
+            elapsed_ms=round((time.perf_counter() - started) * 1000),
+            error_type=e.__class__.__name__,
+            reason=str(e),
+            exception=True,
+        )
+        raise
 
 def route_query(
     state: AgentState,
@@ -151,8 +191,19 @@ async def respond_to_general_query(
     Returns:
         Dict[str, List[BaseMessage]]: 包含'messages'键的字典，其中包含生成的响应。
     """
+    started = time.perf_counter()
     node_logger = logger.bind(**_config_log_fields(config), node="respond_to_general_query")
-    log_event(node_logger, "INFO", "node_started", message_count=len(state.messages))
+    last_message = state.messages[-1].content if state.messages else ""
+    log_event(
+        node_logger,
+        "INFO",
+        "node_started",
+        phase="final_answer",
+        status="started",
+        message_count=len(state.messages),
+        input_message_count=len(state.messages),
+        input_query_len=len(last_message),
+    )
     
     # 使用大模型生成回复
     if settings.AGENT_SERVICE == ServiceType.DEEPSEEK:
@@ -165,9 +216,34 @@ async def respond_to_general_query(
     )
     
     messages = [{"role": "system", "content": system_prompt}] + state.messages
-    response = await model.ainvoke(messages)
-    log_event(node_logger, "INFO", "node_finished", content_len=len(response.content))
-    return {"messages": [response]}
+    try:
+        response = await model.ainvoke(messages)
+        log_event(
+            node_logger,
+            "INFO",
+            "node_finished",
+            phase="final_answer",
+            status="success",
+            elapsed_ms=round((time.perf_counter() - started) * 1000),
+            content_len=len(response.content),
+            output_len=len(response.content),
+            llm_output_len=len(response.content),
+            llm_output_preview=response.content[:500],
+        )
+        return {"messages": [response]}
+    except Exception as e:
+        log_event(
+            node_logger,
+            "ERROR",
+            "node_finished",
+            phase="final_answer",
+            status="failed",
+            elapsed_ms=round((time.perf_counter() - started) * 1000),
+            error_type=e.__class__.__name__,
+            reason=str(e),
+            exception=True,
+        )
+        raise
 
 async def get_additional_info(
     state: AgentState, *, config: RunnableConfig
@@ -183,8 +259,19 @@ async def get_additional_info(
     Returns:
         Dict[str, List[BaseMessage]]: 包含'messages'键的字典，其中包含生成的响应。
     """
+    started = time.perf_counter()
     node_logger = logger.bind(**_config_log_fields(config), node="get_additional_info")
-    log_event(node_logger, "INFO", "node_started", message_count=len(state.messages))
+    last_message = state.messages[-1].content if state.messages else ""
+    log_event(
+        node_logger,
+        "INFO",
+        "node_started",
+        phase="guardrails",
+        status="started",
+        message_count=len(state.messages),
+        input_message_count=len(state.messages),
+        input_query_len=len(last_message),
+    )
     
     # 使用大模型生成回复
     if settings.AGENT_SERVICE == ServiceType.DEEPSEEK:
@@ -196,11 +283,30 @@ async def get_additional_info(
 
     # 首先连接 Neo4j 图数据库
     try:
-        log_event(node_logger, "INFO", "neo4j_query_started", operation="connect")
+        connect_started = time.perf_counter()
+        log_event(node_logger, "INFO", "neo4j_query_started", phase="guardrails", status="started", operation="connect")
         neo4j_graph = get_neo4j_graph()
-        log_event(node_logger, "INFO", "neo4j_query_finished", operation="connect")
+        log_event(
+            node_logger,
+            "INFO",
+            "neo4j_query_finished",
+            phase="guardrails",
+            status="success",
+            operation="connect",
+            elapsed_ms=round((time.perf_counter() - connect_started) * 1000),
+        )
     except Exception as e:
-        log_event(node_logger, "ERROR", "neo4j_query_failed", operation="connect", reason=str(e), exception=True)
+        log_event(
+            node_logger,
+            "ERROR",
+            "neo4j_query_failed",
+            phase="guardrails",
+            status="failed",
+            operation="connect",
+            error_type=e.__class__.__name__,
+            reason=str(e),
+            exception=True,
+        )
 
     # 定义电商经营范围
     scope_description = """
@@ -252,16 +358,58 @@ async def get_additional_info(
 
     # 根据格式化输出的结果，返回不同的响应
     if guardrails_output.decision == "end":
-        log_event(node_logger, "INFO", "guardrails_finished", decision="end")
+        output = "抱歉，我家暂时没有这方面的商品，可以在别家看看哦~"
+        log_event(
+            node_logger,
+            "INFO",
+            "guardrails_finished",
+            phase="guardrails",
+            status="success",
+            decision="end",
+            elapsed_ms=round((time.perf_counter() - started) * 1000),
+            llm_output_len=len(guardrails_output.decision),
+            llm_output_preview=guardrails_output.decision,
+            output_len=len(output),
+        )
+        log_event(
+            node_logger,
+            "INFO",
+            "node_finished",
+            phase="guardrails",
+            status="success",
+            elapsed_ms=round((time.perf_counter() - started) * 1000),
+            output_len=len(output),
+        )
         return {"messages": [AIMessage(content="抱歉，我家暂时没有这方面的商品，可以在别家看看哦~")]}
     else:
-        log_event(node_logger, "INFO", "guardrails_finished", decision="continue")
+        log_event(
+            node_logger,
+            "INFO",
+            "guardrails_finished",
+            phase="guardrails",
+            status="success",
+            decision="continue",
+            elapsed_ms=round((time.perf_counter() - started) * 1000),
+            llm_output_len=len(guardrails_output.decision),
+            llm_output_preview=guardrails_output.decision,
+        )
         system_prompt = GET_ADDITIONAL_SYSTEM_PROMPT.format(
             logic=state.router["logic"]
         )
         messages = [{"role": "system", "content": system_prompt}] + state.messages
         response = await model.ainvoke(messages)
-        log_event(node_logger, "INFO", "node_finished", content_len=len(response.content))
+        log_event(
+            node_logger,
+            "INFO",
+            "node_finished",
+            phase="guardrails",
+            status="success",
+            elapsed_ms=round((time.perf_counter() - started) * 1000),
+            content_len=len(response.content),
+            output_len=len(response.content),
+            llm_output_len=len(response.content),
+            llm_output_preview=response.content[:500],
+        )
         return {"messages": [response]}
 
 async def create_image_query(
@@ -423,8 +571,19 @@ async def create_research_plan(
     Returns:
         Dict[str, List[str] | str]: 包含'steps'键的字典，其中包含研究步骤列表。
     """
+    started = time.perf_counter()
     node_logger = logger.bind(**_config_log_fields(config), node="create_research_plan")
-    log_event(node_logger, "INFO", "node_started", message_count=len(state.messages))
+    last_message = state.messages[-1].content if state.messages else ""
+    log_event(
+        node_logger,
+        "INFO",
+        "node_started",
+        phase="planner",
+        status="started",
+        message_count=len(state.messages),
+        input_message_count=len(state.messages),
+        input_query_len=len(last_message),
+    )
 
     # 使用大模型生成查询/多跳、并行查询计划
     if settings.AGENT_SERVICE == ServiceType.DEEPSEEK:
@@ -435,11 +594,30 @@ async def create_research_plan(
     # 初始化必要参数
     # 1. Neo4j图数据库连接 - 使用配置中的连接信息
     try:
-        log_event(node_logger, "INFO", "neo4j_query_started", operation="connect")
+        connect_started = time.perf_counter()
+        log_event(node_logger, "INFO", "neo4j_query_started", phase="planner", status="started", operation="connect")
         neo4j_graph = get_neo4j_graph()
-        log_event(node_logger, "INFO", "neo4j_query_finished", operation="connect")
+        log_event(
+            node_logger,
+            "INFO",
+            "neo4j_query_finished",
+            phase="planner",
+            status="success",
+            operation="connect",
+            elapsed_ms=round((time.perf_counter() - connect_started) * 1000),
+        )
     except Exception as e:
-        log_event(node_logger, "ERROR", "neo4j_query_failed", operation="connect", reason=str(e), exception=True)
+        log_event(
+            node_logger,
+            "ERROR",
+            "neo4j_query_failed",
+            phase="planner",
+            status="failed",
+            operation="connect",
+            error_type=e.__class__.__name__,
+            reason=str(e),
+            exception=True,
+        )
 
     # 2. 创建自定义检索器实例，根据 Graph Schema 创建 Cypher 示例，用来引导大模型生成正确的Cypher 查询语句
     cypher_retriever = NorthwindCypherRetriever()
@@ -485,16 +663,47 @@ async def create_research_plan(
     }
     
     # 执行工作流
-    log_event(node_logger, "INFO", "tool_called", tool="multi_tool_workflow", query_len=len(last_message))
-    response = await multi_tool_workflow.ainvoke(input_state)
     log_event(
         node_logger,
         "INFO",
-        "node_finished",
+        "tool_called",
+        phase="tool_execution",
+        status="started",
         tool="multi_tool_workflow",
-        content_len=len(response.get("answer", "")),
+        query_len=len(last_message),
+        input_query_len=len(last_message),
     )
-    return {"messages": [AIMessage(content=response["answer"])]}
+    try:
+        response = await multi_tool_workflow.ainvoke(input_state)
+        answer = response.get("answer", "")
+        log_event(
+            node_logger,
+            "INFO",
+            "node_finished",
+            phase="planner",
+            status="success",
+            elapsed_ms=round((time.perf_counter() - started) * 1000),
+            tool="multi_tool_workflow",
+            content_len=len(answer),
+            output_len=len(answer),
+            llm_output_len=len(answer),
+            llm_output_preview=answer[:500],
+        )
+        return {"messages": [AIMessage(content=response["answer"])]}
+    except Exception as e:
+        log_event(
+            node_logger,
+            "ERROR",
+            "node_finished",
+            phase="planner",
+            status="failed",
+            elapsed_ms=round((time.perf_counter() - started) * 1000),
+            tool="multi_tool_workflow",
+            error_type=e.__class__.__name__,
+            reason=str(e),
+            exception=True,
+        )
+        raise
 
 async def check_hallucinations(
     state: AgentState, *, config: RunnableConfig
