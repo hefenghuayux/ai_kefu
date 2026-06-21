@@ -1,7 +1,9 @@
 import unittest
 
 from app.lg_agent.context_manager import (
+    CONTEXT_SYSTEM_PREFIX,
     format_context_bundle,
+    merge_memory_context_into_prompt,
     should_update_session_note,
     validate_session_note,
 )
@@ -103,6 +105,30 @@ class ContextManagerTest(unittest.TestCase):
         self.assertIn("Session Note", context_text)
         self.assertIn("当前状态", context_text)
         self.assertIn("request_id=rid-1", context_text)
+
+    def test_merge_memory_context_keeps_base_prompt_when_memory_empty(self):
+        base_prompt = f"{CONTEXT_SYSTEM_PREFIX}\n最近对话摘录：\n- user：查库存"
+
+        merged = merge_memory_context_into_prompt(
+            base_prompt_context=base_prompt,
+            session_memory_context="",
+            relevant_memory_context="",
+        )
+
+        self.assertEqual(merged, base_prompt)
+
+    def test_merge_memory_context_places_memory_after_prefix(self):
+        base_prompt = f"{CONTEXT_SYSTEM_PREFIX}\nSession Note：\n- 当前状态：查库存"
+
+        merged = merge_memory_context_into_prompt(
+            base_prompt_context=base_prompt,
+            session_memory_context="<session_memory>会话摘要</session_memory>",
+            relevant_memory_context="<memory>回答要简洁</memory>",
+        )
+
+        self.assertTrue(merged.startswith(CONTEXT_SYSTEM_PREFIX))
+        self.assertLess(merged.index("<session_memory>"), merged.index("Session Note"))
+        self.assertLess(merged.index("Session Note"), merged.index("<memory>"))
 
 
 if __name__ == "__main__":

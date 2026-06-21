@@ -222,6 +222,7 @@ def create_graphrag_query_node(
                     order_id=query_parameters.get("order_id"),
                     user_id=query_parameters.get("user_id"),
                     voucher_id=query_parameters.get("voucher_id"),
+                    product_id=query_parameters.get("product_id"),
                 )
                 log_event(
                     logger,

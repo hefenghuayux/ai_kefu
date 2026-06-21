@@ -19,12 +19,14 @@ class CommerceApiClient:
         order_id: Optional[int] = None,
         user_id: Optional[int] = None,
         voucher_id: Optional[int] = None,
+        product_id: Optional[int] = None,
     ) -> Dict[str, Any]:
         endpoint = self._endpoint(
             action=action,
             order_id=order_id,
             user_id=user_id,
             voucher_id=voucher_id,
+            product_id=product_id,
         )
         headers = {"X-Internal-Token": self.internal_token}
         timeout = aiohttp.ClientTimeout(total=settings.COMMERCE_API_TIMEOUT)
@@ -44,6 +46,7 @@ class CommerceApiClient:
         order_id: Optional[int],
         user_id: Optional[int],
         voucher_id: Optional[int],
+        product_id: Optional[int],
     ) -> str:
         if action == "order_status":
             if order_id is None:
@@ -61,5 +64,16 @@ class CommerceApiClient:
             if user_id is None or voucher_id is None:
                 raise ValueError("purchase_eligibility 需要 user_id 和 voucher_id")
             return f"/internal/customer-service/users/{user_id}/vouchers/{voucher_id}/eligibility"
+        if action == "product_detail":
+            if product_id is None:
+                raise ValueError("product_detail 需要 product_id")
+            return f"/internal/customer-service/products/{product_id}"
+        if action == "product_stock":
+            if product_id is None:
+                raise ValueError("product_stock 需要 product_id")
+            return f"/internal/customer-service/products/{product_id}/stock"
+        if action == "user_product_orders":
+            if user_id is None:
+                raise ValueError("user_product_orders 需要 user_id")
+            return f"/internal/customer-service/users/{user_id}/product-orders"
         raise ValueError(f"不支持的 commerce live query action: {action}")
-

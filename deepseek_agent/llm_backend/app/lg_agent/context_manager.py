@@ -10,6 +10,12 @@ from sqlalchemy import desc, func, select, update
 from app.core.config import ServiceType, settings
 from app.core.database import AsyncSessionLocal
 from app.core.logger import get_logger, log_event
+from app.memory_system.config import load_memory_config
+from app.memory_system.find_relevant_memories import find_relevant_memories
+from app.memory_system.paths import MemoryPaths, build_memory_identity, resolve_memory_paths
+from app.memory_system.render import render_memory_context
+from app.memory_system.schemas import MemoryIdentity
+from app.memory_system.session_memory import load_session_memory
 from app.models.conversation_context import ConversationContextItem
 from app.models.message import Message
 from app.models.user_memory import UserMemoryItem
@@ -201,6 +207,240 @@ def format_context_bundle(context_bundle: dict[str, Any]) -> str:
     return "\n".join([CONTEXT_SYSTEM_PREFIX] + lines)
 
 
+def _memory_trace_base() -> dict[str, Any]:
+    return {
+        "enabled": False,
+        "source_of_truth": "markdown",
+        "mysql_mode": "index_audit_compat",
+        "recall_enabled": False,
+        "transcript_enabled": False,
+        "session_memory_enabled": False,
+        "extract_memories_enabled": False,
+        "auto_dream_enabled": False,
+        "session_memory_loaded": False,
+        "selected_memory_count": 0,
+        "selected_memory_paths": [],
+        "skipped_memory_paths": [],
+        "skipped_reasons": [],
+    }
+
+
+def _serialize_memory_identity(identity: MemoryIdentity) -> dict[str, Any]:
+    return {
+        "customer_id": identity.customer_id,
+        "tenant_id": identity.tenant_id,
+        "conversation_id": identity.conversation_id,
+        "user_id": identity.user_id,
+    }
+
+
+def _serialize_memory_paths(paths: MemoryPaths) -> dict[str, Optional[str]]:
+    return {
+        "root": str(paths.root),
+        "customer_memory_dir": str(paths.customer_memory_dir),
+        "business_memory_dir": str(paths.business_memory_dir),
+        "session_summary_path": str(paths.session_summary_path) if paths.session_summary_path else None,
+        "transcript_path": str(paths.transcript_path) if paths.transcript_path else None,
+        "extract_cursor_path": str(paths.extract_cursor_path),
+        "auto_dream_state_path": str(paths.auto_dream_state_path),
+        "surfaced_memories_path": str(paths.surfaced_memories_path),
+    }
+
+
+def merge_memory_context_into_prompt(
+    *,
+    base_prompt_context: str,
+    session_memory_context: str,
+    relevant_memory_context: str,
+) -> str:
+    if not session_memory_context and not relevant_memory_context:
+        return base_prompt_context
+
+    if not base_prompt_context:
+        return "\n".join(
+            [CONTEXT_SYSTEM_PREFIX]
+            + [part for part in (session_memory_context, relevant_memory_context) if part]
+        )
+
+    if base_prompt_context.startswith(CONTEXT_SYSTEM_PREFIX):
+        body = base_prompt_context[len(CONTEXT_SYSTEM_PREFIX) :].lstrip("\n")
+        ordered_parts = [CONTEXT_SYSTEM_PREFIX]
+        if session_memory_context:
+            ordered_parts.append(session_memory_context)
+        if body:
+            ordered_parts.append(body)
+        if relevant_memory_context:
+            ordered_parts.append(relevant_memory_context)
+        return "\n".join(ordered_parts)
+
+    return "\n\n".join(
+        [part for part in (session_memory_context, base_prompt_context, relevant_memory_context) if part]
+    )
+
+
+async def _attach_file_memory_context(
+    *,
+    context: dict[str, Any],
+    user_id: int,
+    conversation_id: Optional[str | int],
+    query: str,
+    base_prompt_context: str,
+) -> None:
+    memory_trace = _memory_trace_base()
+    context["memory_trace"] = memory_trace
+    context["prompt_context"] = base_prompt_context
+
+    try:
+        memory_config = load_memory_config()
+    except Exception as exc:
+        memory_trace.update(
+            {
+                "status": "failed",
+                "reason": str(exc),
+                "error_type": exc.__class__.__name__,
+            }
+        )
+        log_event(
+            logger,
+            "ERROR",
+            "memory_config_load_failed",
+            user_id=user_id,
+            conversation_id=conversation_id,
+            error_type=exc.__class__.__name__,
+            reason=str(exc),
+            exception=True,
+        )
+        return
+
+    memory_trace.update(
+        {
+            "enabled": memory_config.enabled,
+            "recall_enabled": memory_config.recall_enabled,
+            "transcript_enabled": memory_config.transcript_enabled,
+            "session_memory_enabled": memory_config.session_memory_enabled,
+            "extract_memories_enabled": memory_config.extract_memories_enabled,
+            "auto_dream_enabled": memory_config.auto_dream_enabled,
+        }
+    )
+    if not memory_config.enabled:
+        memory_trace["status"] = "disabled"
+        memory_trace["skipped_reasons"].append("memory_disabled")
+        return
+
+    try:
+        identity = build_memory_identity(
+            user_id=user_id,
+            conversation_id=conversation_id,
+            tenant_id=None,
+            config=memory_config,
+        )
+        paths = resolve_memory_paths(identity=identity, config=memory_config)
+        context["memory_identity"] = _serialize_memory_identity(identity)
+        context["memory_paths"] = _serialize_memory_paths(paths)
+
+        session_summary = None
+        if memory_config.session_memory_enabled and paths.session_summary_path is not None:
+            session_state = await load_session_memory(paths.session_summary_path)
+            session_summary = session_state.content
+            context["file_session_memory"] = session_summary
+            memory_trace["session_memory_loaded"] = session_state.exists
+            memory_trace["session_summary_path"] = str(paths.session_summary_path)
+        elif not memory_config.session_memory_enabled:
+            memory_trace["skipped_reasons"].append("session_memory_disabled")
+        else:
+            memory_trace["skipped_reasons"].append("missing_session_summary_path")
+
+        relevant_memories = []
+        recall_result = None
+        if memory_config.recall_enabled:
+            log_event(
+                logger,
+                "INFO",
+                "memory_recall_started",
+                user_id=user_id,
+                conversation_id=conversation_id,
+                query_len=len(query),
+            )
+            recall_result = await find_relevant_memories(
+                query=query,
+                paths=paths,
+                config=memory_config,
+            )
+            relevant_memories = recall_result.selected
+            memory_trace.update(
+                {
+                    "manifest_count": recall_result.manifest_count,
+                    "selected_memory_count": len(recall_result.selected),
+                    "selected_memory_paths": recall_result.selected_paths,
+                    "skipped_memory_paths": recall_result.skipped_paths,
+                    "recall_selector": recall_result.selector,
+                    "recall_elapsed_ms": recall_result.elapsed_ms,
+                    "recall_reason": recall_result.reason,
+                }
+            )
+            log_event(
+                logger,
+                "INFO",
+                "memory_recall_finished",
+                user_id=user_id,
+                conversation_id=conversation_id,
+                manifest_count=recall_result.manifest_count,
+                selected_memory_count=len(recall_result.selected),
+                selected_memory_paths=",".join(recall_result.selected_paths),
+                recall_reason=recall_result.reason,
+                elapsed_ms=recall_result.elapsed_ms,
+            )
+        else:
+            memory_trace["skipped_reasons"].append("recall_disabled")
+
+        session_memory_context = render_memory_context(
+            session_summary=session_summary,
+            relevant_memories=[],
+        )
+        relevant_memory_context = render_memory_context(
+            session_summary=None,
+            relevant_memories=relevant_memories,
+        )
+        context["prompt_context"] = merge_memory_context_into_prompt(
+            base_prompt_context=base_prompt_context,
+            session_memory_context=session_memory_context,
+            relevant_memory_context=relevant_memory_context,
+        )
+        memory_trace["status"] = "loaded"
+        memory_trace["prompt_context_len"] = len(context["prompt_context"])
+        log_event(
+            logger,
+            "INFO",
+            "memory_context_rendered",
+            user_id=user_id,
+            conversation_id=conversation_id,
+            session_memory_loaded=memory_trace["session_memory_loaded"],
+            selected_memory_count=memory_trace["selected_memory_count"],
+            prompt_context_len=memory_trace["prompt_context_len"],
+        )
+        if recall_result and recall_result.reason:
+            memory_trace["skipped_reasons"].append(recall_result.reason)
+    except Exception as exc:
+        context["prompt_context"] = base_prompt_context
+        memory_trace.update(
+            {
+                "status": "failed",
+                "reason": str(exc),
+                "error_type": exc.__class__.__name__,
+            }
+        )
+        log_event(
+            logger,
+            "ERROR",
+            "memory_context_load_failed",
+            user_id=user_id,
+            conversation_id=conversation_id,
+            error_type=exc.__class__.__name__,
+            reason=str(exc),
+            exception=True,
+        )
+
+
 async def load_context_bundle(
     user_id: int,
     conversation_id: Optional[str | int],
@@ -232,7 +472,14 @@ async def load_context_bundle(
             context["tool_evidence"] = items
         elif item_type == "failed_path":
             context["failed_paths"] = items
-    context["prompt_context"] = format_context_bundle(context)
+    base_prompt_context = format_context_bundle(context)
+    await _attach_file_memory_context(
+        context=context,
+        user_id=user_id,
+        conversation_id=conversation_id,
+        query=query,
+        base_prompt_context=base_prompt_context,
+    )
     context["history_records"] = [
         {
             "question": item["content"],
@@ -254,6 +501,8 @@ async def load_context_bundle(
         tool_evidence_count=len(context["tool_evidence"]),
         failed_path_count=len(context["failed_paths"]),
         user_preference_count=len(context["user_preferences"]),
+        memory_enabled=context.get("memory_trace", {}).get("enabled"),
+        selected_memory_count=context.get("memory_trace", {}).get("selected_memory_count"),
     )
     return context
 

@@ -28,6 +28,8 @@ def copy_docs(docs_path: Path, target_dir: Path) -> None:
 
 def reset_commerce_graph(session) -> None:
     session.run("MATCH (n:Shop) DETACH DELETE n")
+    session.run("MATCH (n:Category) DETACH DELETE n")
+    session.run("MATCH (n:Product) DETACH DELETE n")
     session.run("MATCH (n:Voucher) DETACH DELETE n")
     session.run("MATCH (n:Activity) DETACH DELETE n")
     session.run("MATCH (n:Policy) DETACH DELETE n")
@@ -60,6 +62,8 @@ def merge_relationships(session, relationships: Iterable[Dict[str, Any]]) -> Non
 def id_key(label: str) -> str:
     keys = {
         "Shop": "shopId",
+        "Category": "categoryId",
+        "Product": "productId",
         "Voucher": "voucherId",
         "Activity": "activityId",
         "Policy": "policyId",
@@ -73,6 +77,8 @@ def sync_neo4j(args, kg: Dict[str, Any]) -> None:
         with driver.session(database=args.neo4j_database) as session:
             reset_commerce_graph(session)
             merge_nodes(session, "Shop", "shopId", kg.get("shops", []))
+            merge_nodes(session, "Category", "categoryId", kg.get("categories", []))
+            merge_nodes(session, "Product", "productId", kg.get("products", []))
             merge_nodes(session, "Voucher", "voucherId", kg.get("vouchers", []))
             merge_nodes(session, "Activity", "activityId", kg.get("activities", []))
             merge_nodes(session, "Policy", "policyId", kg.get("policies", []))

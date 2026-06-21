@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Query, Form, Reque
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from typing import List, Dict, Optional
+from typing import Any, List, Dict, Optional
 from app.services.llm_factory import LLMFactory
 from app.services.search_service import SearchService
 from fastapi.staticfiles import StaticFiles
@@ -26,6 +26,7 @@ from app.models.conversation import Conversation, DialogueType
 from app.models.message import Message
 from sqlalchemy import select
 from app.services.conversation_service import ConversationService
+import asyncio
 import uuid
 import os
 from app.services.indexing_service import IndexingService
@@ -39,6 +40,12 @@ from app.lg_agent.context_manager import (
 )
 from app.lg_agent.utils import new_uuid
 from app.lg_agent.lg_builder import graph
+from app.memory_system.auto_dream import run_auto_dream
+from app.memory_system.config import load_memory_config
+from app.memory_system.extract_memories import maybe_extract_memories
+from app.memory_system.paths import build_memory_identity, resolve_memory_paths
+from app.memory_system.session_memory import update_session_memory
+from app.memory_system.transcripts import append_turn_transcript
 from langgraph.types import Command
 import json
 import time
@@ -121,13 +128,19 @@ def _debug_trace_requested(request: Request, payload: Optional[dict] = None) -> 
     )
 
 
-def _debug_trace_sse(request_id: str, conversation_id: Optional[str], thread_id: str) -> str:
+def _debug_trace_sse(
+    request_id: str,
+    conversation_id: Optional[str],
+    thread_id: str,
+    memory_trace: Optional[dict[str, Any]] = None,
+) -> str:
     trace_json = json.dumps(
         {
             "request_id": request_id,
             "conversation_id": conversation_id,
             "thread_id": thread_id,
             "events": get_trace(),
+            "memory_trace": memory_trace,
         },
         ensure_ascii=False,
     )
@@ -185,6 +198,258 @@ async def _handle_session_note_update(
         session_note_json=json.dumps(session_note, ensure_ascii=False) if session_note else None,
         error_type=result.get("error_type"),
     )
+
+
+def _normalize_tool_evidence_for_transcript(
+    evidence_items: list[dict],
+    request_id: str,
+) -> list[dict[str, Any]]:
+    normalized: list[dict[str, Any]] = []
+    for item in evidence_items:
+        if not isinstance(item, dict):
+            continue
+        result_digest = (
+            item.get("result_digest")
+            or item.get("content")
+            or item.get("digest")
+            or item.get("summary")
+            or str(item)
+        )
+        normalized.append(
+            {
+                "tool_name": str(item.get("tool_name") or item.get("tool") or "unknown_tool"),
+                "request_id": str(item.get("request_id") or request_id),
+                "raw_ref": item.get("raw_ref") or f"request_id={request_id}",
+                "result_digest": str(result_digest),
+                "result_count": item.get("result_count"),
+                "elapsed_ms": item.get("elapsed_ms"),
+            }
+        )
+    return normalized
+
+
+async def _log_background_memory_result(
+    *,
+    task_name: str,
+    request_logger,
+    coro,
+) -> None:
+    try:
+        result = await coro
+        log_event(
+            request_logger,
+            "INFO",
+            f"{task_name}_finished",
+            status=getattr(result, "status", None),
+            reason=getattr(result, "reason", None),
+            error_type=getattr(result, "error_type", None),
+        )
+    except Exception as exc:
+        log_event(
+            request_logger,
+            "ERROR",
+            f"{task_name}_failed",
+            error_type=exc.__class__.__name__,
+            reason=str(exc),
+            exception=True,
+        )
+
+
+async def _handle_file_memory_after_response(
+    *,
+    debug_trace: bool,
+    request_logger,
+    user_id: int,
+    conversation_id: Optional[str],
+    thread_id: str,
+    request_id: str,
+    user_query: str,
+    final_answer: str,
+    evidence_items: list[dict],
+    context_bundle: dict,
+) -> None:
+    memory_trace = context_bundle.setdefault("memory_trace", {})
+    try:
+        memory_config = load_memory_config()
+    except Exception as exc:
+        memory_trace.update(
+            {
+                "enabled": False,
+                "after_response_status": "failed",
+                "reason": str(exc),
+                "error_type": exc.__class__.__name__,
+            }
+        )
+        log_event(
+            request_logger,
+            "ERROR",
+            "memory_after_response_failed",
+            error_type=exc.__class__.__name__,
+            reason=str(exc),
+            exception=True,
+        )
+        return
+
+    memory_trace.update(
+        {
+            "enabled": memory_config.enabled,
+            "source_of_truth": "markdown",
+            "mysql_mode": "index_audit_compat",
+            "transcript_enabled": memory_config.transcript_enabled,
+            "session_memory_enabled": memory_config.session_memory_enabled,
+            "extract_memories_enabled": memory_config.extract_memories_enabled,
+            "auto_dream_enabled": memory_config.auto_dream_enabled,
+        }
+    )
+    if not memory_config.enabled:
+        memory_trace["after_response_status"] = "disabled"
+        return
+
+    try:
+        identity = build_memory_identity(
+            user_id=user_id,
+            conversation_id=conversation_id or thread_id,
+            tenant_id=None,
+            config=memory_config,
+        )
+        paths = resolve_memory_paths(identity=identity, config=memory_config)
+        memory_trace["conversation_id"] = identity.conversation_id
+        memory_trace["transcript_path"] = str(paths.transcript_path) if paths.transcript_path else None
+        memory_trace["session_summary_path"] = str(paths.session_summary_path) if paths.session_summary_path else None
+
+        if memory_config.transcript_enabled and paths.transcript_path is not None and identity.conversation_id:
+            transcript_events = await append_turn_transcript(
+                transcript_path=paths.transcript_path,
+                request_id=request_id,
+                conversation_id=identity.conversation_id,
+                user_id=user_id,
+                tenant_id=identity.tenant_id,
+                user_query=user_query,
+                final_answer=final_answer,
+                tool_evidence=_normalize_tool_evidence_for_transcript(evidence_items, request_id),
+            )
+            memory_trace["transcript_status"] = "appended"
+            memory_trace["transcript_event_count"] = len(transcript_events)
+            log_event(
+                request_logger,
+                "INFO",
+                "memory_transcript_appended",
+                transcript_path=str(paths.transcript_path),
+                transcript_event_count=len(transcript_events),
+            )
+        elif not memory_config.transcript_enabled:
+            memory_trace["transcript_status"] = "skipped"
+            memory_trace["transcript_reason"] = "transcript_disabled"
+        else:
+            memory_trace["transcript_status"] = "skipped"
+            memory_trace["transcript_reason"] = "missing_transcript_path"
+
+        session_coro = update_session_memory(
+            summary_path=paths.session_summary_path,
+            context_bundle=context_bundle,
+            user_query=user_query,
+            final_answer=final_answer,
+            tool_evidence=evidence_items,
+            config=memory_config,
+        )
+        if debug_trace:
+            session_result = await session_coro
+            memory_trace.update(
+                {
+                    "session_update_status": session_result.status,
+                    "session_update_reason": session_result.reason,
+                    "session_update_error_type": session_result.error_type,
+                }
+            )
+        else:
+            asyncio.create_task(
+                _log_background_memory_result(
+                    task_name="session_memory_update",
+                    request_logger=request_logger,
+                    coro=session_coro,
+                )
+            )
+            memory_trace["session_update_status"] = "scheduled"
+
+        extract_coro = maybe_extract_memories(
+            paths=paths,
+            identity=identity,
+            config=memory_config,
+            request_id=request_id,
+        )
+        if debug_trace:
+            extract_result = await extract_coro
+            memory_trace.update(
+                {
+                    "extract_status": extract_result.status,
+                    "extract_reason": extract_result.reason,
+                    "extract_processed_event_count": extract_result.processed_event_count,
+                    "extract_written_paths": extract_result.written_paths,
+                    "extract_updated_paths": extract_result.updated_paths,
+                    "extract_rejected_count": extract_result.rejected_count,
+                    "extract_error_type": extract_result.error_type,
+                }
+            )
+        else:
+            asyncio.create_task(
+                _log_background_memory_result(
+                    task_name="extract_memories",
+                    request_logger=request_logger,
+                    coro=extract_coro,
+                )
+            )
+            memory_trace["extract_status"] = "scheduled"
+
+        auto_dream_coro = run_auto_dream(paths=paths, config=memory_config, force=False)
+        if debug_trace:
+            auto_dream_result = await auto_dream_coro
+            memory_trace.update(
+                {
+                    "auto_dream_status": auto_dream_result.status,
+                    "auto_dream_reason": auto_dream_result.reason,
+                    "auto_dream_session_count": auto_dream_result.session_count,
+                    "auto_dream_updated_paths": auto_dream_result.updated_paths,
+                    "auto_dream_error_type": auto_dream_result.error_type,
+                }
+            )
+        else:
+            asyncio.create_task(
+                _log_background_memory_result(
+                    task_name="auto_dream",
+                    request_logger=request_logger,
+                    coro=auto_dream_coro,
+                )
+            )
+            memory_trace["auto_dream_status"] = "scheduled"
+
+        memory_trace["after_response_status"] = "processed"
+        log_event(
+            request_logger,
+            "INFO",
+            "memory_trace",
+            file_memory_enabled=memory_trace.get("enabled"),
+            transcript_status=memory_trace.get("transcript_status"),
+            session_update_status=memory_trace.get("session_update_status"),
+            extract_status=memory_trace.get("extract_status"),
+            auto_dream_status=memory_trace.get("auto_dream_status"),
+            selected_memory_count=memory_trace.get("selected_memory_count"),
+        )
+    except Exception as exc:
+        memory_trace.update(
+            {
+                "after_response_status": "failed",
+                "after_response_error_type": exc.__class__.__name__,
+                "after_response_reason": str(exc),
+            }
+        )
+        log_event(
+            request_logger,
+            "ERROR",
+            "memory_after_response_failed",
+            error_type=exc.__class__.__name__,
+            reason=str(exc),
+            exception=True,
+        )
 
 
 @app.get("/health")
@@ -611,6 +876,18 @@ async def langgraph_query(
                             evidence_items=tool_evidence,
                             context_bundle=context_bundle,
                         )
+                        await _handle_file_memory_after_response(
+                            debug_trace=debug_trace,
+                            request_logger=request_logger,
+                            user_id=user_id,
+                            conversation_id=conversation_id,
+                            thread_id=thread_id,
+                            request_id=request_id,
+                            user_query=query,
+                            final_answer=final_message,
+                            evidence_items=tool_evidence,
+                            context_bundle=context_bundle,
+                        )
                         content_json = json.dumps(final_message, ensure_ascii=False)
                         yield f"data: {content_json}\n\n"
                 except Exception as e:
@@ -634,7 +911,12 @@ async def langgraph_query(
                     interrupt_json = json.dumps({"interruption": True, "conversation_id": thread_id})
                     yield f"data: {interrupt_json}\n\n"
                 if debug_trace:
-                    yield _debug_trace_sse(request_id, conversation_id, thread_id)
+                    yield _debug_trace_sse(
+                        request_id,
+                        conversation_id,
+                        thread_id,
+                        context_bundle.get("memory_trace"),
+                    )
                 clear_trace()
         else:
             if has_existing_state:
@@ -706,6 +988,18 @@ async def langgraph_query(
                             evidence_items=tool_evidence,
                             context_bundle=context_bundle,
                         )
+                        await _handle_file_memory_after_response(
+                            debug_trace=debug_trace,
+                            request_logger=request_logger,
+                            user_id=user_id,
+                            conversation_id=conversation_id,
+                            thread_id=thread_id,
+                            request_id=request_id,
+                            user_query=query,
+                            final_answer=final_message,
+                            evidence_items=tool_evidence,
+                            context_bundle=context_bundle,
+                        )
                         content_json = json.dumps(final_message, ensure_ascii=False)
                         yield f"data: {content_json}\n\n"
                 except Exception as e:
@@ -729,7 +1023,12 @@ async def langgraph_query(
                     interrupt_json = json.dumps({"interruption": True, "conversation_id": thread_id})
                     yield f"data: {interrupt_json}\n\n"
                 if debug_trace:
-                    yield _debug_trace_sse(request_id, conversation_id, thread_id)
+                    yield _debug_trace_sse(
+                        request_id,
+                        conversation_id,
+                        thread_id,
+                        context_bundle.get("memory_trace"),
+                    )
                 clear_trace()
         
         response = StreamingResponse(

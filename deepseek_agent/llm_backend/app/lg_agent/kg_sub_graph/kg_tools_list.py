@@ -79,16 +79,25 @@ class microsoft_graphrag_query(BaseModel):
 
 
 class commerce_live_query(BaseModel):
-    """如果用户问的是订单状态、秒杀实时库存、是否还能购买、是否已经买过某张券等实时业务状态，则使用这个工具调用业务后端"""
+    """如果用户问的是订单状态、商品实时库存、秒杀实时库存、是否还能购买、是否已经买过某张券等实时业务状态，则使用这个工具调用业务后端"""
 
-    action: Literal["order_status", "user_orders", "seckill_status", "purchase_eligibility"] = Field(
+    action: Literal[
+        "order_status",
+        "user_orders",
+        "seckill_status",
+        "purchase_eligibility",
+        "product_detail",
+        "product_stock",
+        "user_product_orders",
+    ] = Field(
         ...,
-        description="实时业务动作：order_status、user_orders、seckill_status、purchase_eligibility",
+        description="实时业务动作：order_status、user_orders、seckill_status、purchase_eligibility、product_detail、product_stock、user_product_orders",
     )
     query: str = Field(..., description="用户原始问题")
     order_id: Optional[int] = Field(None, description="订单ID，查询订单状态时必填")
     user_id: Optional[int] = Field(None, description="用户ID，查询用户订单或购买资格时必填")
     voucher_id: Optional[int] = Field(None, description="优惠券ID，查询秒杀状态或购买资格时必填")
+    product_id: Optional[int] = Field(None, description="商品ID，查询商品详情或商品实时库存时必填")
     
 
 class real_time_network_query(BaseModel):
