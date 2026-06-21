@@ -31,6 +31,12 @@ import os
 from app.services.indexing_service import IndexingService
 import sys
 from app.lg_agent.lg_states import AgentState, InputState
+from app.lg_agent.context_manager import (
+    load_context_bundle,
+    maybe_schedule_session_note_update,
+    save_tool_evidence_items,
+    update_session_note_for_trace,
+)
 from app.lg_agent.utils import new_uuid
 from app.lg_agent.lg_builder import graph
 from langgraph.types import Command
@@ -126,6 +132,59 @@ def _debug_trace_sse(request_id: str, conversation_id: Optional[str], thread_id:
         ensure_ascii=False,
     )
     return f"event: trace\ndata: {trace_json}\n\n"
+
+
+async def _handle_session_note_update(
+    *,
+    debug_trace: bool,
+    request_logger,
+    user_id: int,
+    conversation_id: Optional[str],
+    request_id: str,
+    user_query: str,
+    final_answer: str,
+    evidence_items: list[dict],
+    context_bundle: dict,
+) -> None:
+    if not debug_trace:
+        maybe_schedule_session_note_update(
+            user_id=user_id,
+            conversation_id=conversation_id,
+            request_id=request_id,
+            user_query=user_query,
+            final_answer=final_answer,
+            evidence_items=evidence_items,
+            context_bundle=context_bundle,
+        )
+        return
+
+    result = await update_session_note_for_trace(
+        user_id=user_id,
+        conversation_id=conversation_id,
+        request_id=request_id,
+        user_query=user_query,
+        final_answer=final_answer,
+        evidence_items=evidence_items,
+        context_bundle=context_bundle,
+    )
+    session_note = result.get("session_note") or {}
+    log_event(
+        request_logger,
+        "INFO",
+        "memory_trace",
+        status=result.get("status"),
+        reason=result.get("reason"),
+        messages_since_session_note=result.get("messages_since_session_note"),
+        evidence_count=result.get("evidence_count"),
+        current_state=session_note.get("current_state"),
+        customer_need=session_note.get("customer_need"),
+        next_action=session_note.get("next_action"),
+        confirmed_fact_count=len(session_note.get("confirmed_facts", [])),
+        failed_path_count=len(session_note.get("failed_paths", [])),
+        user_preference_count=len(session_note.get("user_preferences", [])),
+        session_note_json=json.dumps(session_note, ensure_ascii=False) if session_note else None,
+        error_type=result.get("error_type"),
+    )
 
 
 @app.get("/health")
@@ -454,6 +513,22 @@ async def langgraph_query(
             }
         }
         request_logger = request_logger.bind(thread_id=thread_id)
+        context_bundle = await load_context_bundle(
+            user_id=user_id,
+            conversation_id=conversation_id,
+            query=query,
+        )
+        log_event(
+            request_logger,
+            "INFO",
+            "context_bundle_prepared",
+            recent_message_count=len(context_bundle.get("recent_messages", [])),
+            confirmed_fact_count=len(context_bundle.get("confirmed_facts", [])),
+            tool_evidence_count=len(context_bundle.get("tool_evidence", [])),
+            failed_path_count=len(context_bundle.get("failed_paths", [])),
+            user_preference_count=len(context_bundle.get("user_preferences", [])),
+            prompt_context_len=len(context_bundle.get("prompt_context", "")),
+        )
         
         # 获取当前线程状态。LangGraph 的 StateSnapshot.values 才是真正的业务状态；
         # 不能用 tuple 下标判断，否则普通完成态会因为没有 interrupt 被误判成新会话。
@@ -482,11 +557,15 @@ async def langgraph_query(
                     start_trace()
                 try:
                     result = await graph.ainvoke(
-                        Command(resume=query),
+                        Command(
+                            resume=query,
+                            update={"context_bundle": context_bundle, "tool_evidence": []},
+                        ),
                         config=thread_config
                     )
                     messages = result.get("messages", [])
                     final_message = messages[-1].content if messages else ""
+                    tool_evidence = result.get("tool_evidence", [])
                     log_event(
                         request_logger,
                         "INFO",
@@ -498,6 +577,7 @@ async def langgraph_query(
                         message_count=len(messages),
                         content_len=len(final_message),
                         output_len=len(final_message),
+                        tool_evidence_count=len(tool_evidence),
                     )
                     if final_message:
                         if conversation_id and str(conversation_id).isdigit():
@@ -514,6 +594,23 @@ async def langgraph_query(
                                 "conversation_persist_skipped",
                                 reason="conversation_id is not a MySQL integer id",
                             )
+                        await save_tool_evidence_items(
+                            user_id=user_id,
+                            conversation_id=conversation_id,
+                            request_id=request_id,
+                            evidence_items=tool_evidence,
+                        )
+                        await _handle_session_note_update(
+                            debug_trace=debug_trace,
+                            request_logger=request_logger,
+                            user_id=user_id,
+                            conversation_id=conversation_id,
+                            request_id=request_id,
+                            user_query=query,
+                            final_answer=final_message,
+                            evidence_items=tool_evidence,
+                            context_bundle=context_bundle,
+                        )
                         content_json = json.dumps(final_message, ensure_ascii=False)
                         yield f"data: {content_json}\n\n"
                 except Exception as e:
@@ -544,7 +641,11 @@ async def langgraph_query(
                 log_event(request_logger, "INFO", "conversation_state_used")
             else:
                 log_event(request_logger, "INFO", "conversation_state_created")
-            input_state = InputState(messages=query)
+            input_state = InputState(
+                messages=query,
+                context_bundle=context_bundle,
+                tool_evidence=[],
+            )
             
             # 流式处理查询
             async def process_stream():
@@ -559,6 +660,7 @@ async def langgraph_query(
                     )
                     messages = result.get("messages", [])
                     final_message = messages[-1].content if messages else ""
+                    tool_evidence = result.get("tool_evidence", [])
                     log_event(
                         request_logger,
                         "INFO",
@@ -570,6 +672,7 @@ async def langgraph_query(
                         message_count=len(messages),
                         content_len=len(final_message),
                         output_len=len(final_message),
+                        tool_evidence_count=len(tool_evidence),
                     )
                     if final_message:
                         if conversation_id and str(conversation_id).isdigit():
@@ -586,6 +689,23 @@ async def langgraph_query(
                                 "conversation_persist_skipped",
                                 reason="conversation_id is not a MySQL integer id",
                             )
+                        await save_tool_evidence_items(
+                            user_id=user_id,
+                            conversation_id=conversation_id,
+                            request_id=request_id,
+                            evidence_items=tool_evidence,
+                        )
+                        await _handle_session_note_update(
+                            debug_trace=debug_trace,
+                            request_logger=request_logger,
+                            user_id=user_id,
+                            conversation_id=conversation_id,
+                            request_id=request_id,
+                            user_query=query,
+                            final_answer=final_message,
+                            evidence_items=tool_evidence,
+                            context_bundle=context_bundle,
+                        )
                         content_json = json.dumps(final_message, ensure_ascii=False)
                         yield f"data: {content_json}\n\n"
                 except Exception as e:

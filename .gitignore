@@ -1,0 +1,50 @@
+# Python caches
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+posting.env
+
+# Runtime data and local service state
+.data/
+local_services/*.pid
+local_services/*.log
+tmp_redis_*.txt
+
+# Logs and generated reports
+logs/
+deepseek_agent/logs/
+evals/reports/
+
+# Temporary and generated artifacts
+tmp/
+uploads/
+deepseek_agent/uploads/
+deepseek_agent/llm_backend/uploads/
+outputs/**/node_modules/
+outputs/**/.next/
+outputs/**/dist/
+output/**/*.docx
+output/**/*.pptx
+output/**/*.pdf
+
+# Local indexes and packaged frontend bundles
+indexes/
+deepseek_agent/llm_backend/static/dist.zip
+
+# IDE and OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

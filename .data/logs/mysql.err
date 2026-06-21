@@ -144,3 +144,43 @@
 2026-06-11T03:52:20.520391Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
 2026-06-11T03:52:22.219984Z 0 [System] [MY-010931] [Server] E:\environment\mysql-8.0.46-winx64-bin\bin\mysqld.exe: ready for connections. Version: '8.0.46'  socket: ''  port: 3306  MySQL Community Server - GPL.
 2026-06-11T03:52:22.276313Z 8 [Warning] [MY-013360] [Server] Plugin mysql_native_password reported: ''mysql_native_password' is deprecated and will be removed in a future release. Please use caching_sha2_password instead'
+2026-06-13T13:02:00.812700Z 0 [Warning] [MY-010097] [Server] Insecure configuration for --secure-file-priv: Current value does not restrict location of generated files. Consider setting it to a valid, non-empty path.
+2026-06-13T13:02:00.813081Z 0 [System] [MY-010116] [Server] E:\environment\mysql-8.0.46-winx64-bin\bin\mysqld.exe (mysqld 8.0.46) starting as process 25376
+2026-06-13T13:02:00.909166Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-06-13T13:02:01.555965Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-06-13T13:02:02.055632Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+2026-06-13T13:02:02.056637Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+2026-06-13T13:02:02.127284Z 0 [System] [MY-010931] [Server] E:\environment\mysql-8.0.46-winx64-bin\bin\mysqld.exe: ready for connections. Version: '8.0.46'  socket: ''  port: 3306  MySQL Community Server - GPL.
+2026-06-13T13:02:02.473373Z 8 [Warning] [MY-013360] [Server] Plugin mysql_native_password reported: ''mysql_native_password' is deprecated and will be removed in a future release. Please use caching_sha2_password instead'
+2026-06-14T02:33:46.011173Z 0 [Warning] [MY-010097] [Server] Insecure configuration for --secure-file-priv: Current value does not restrict location of generated files. Consider setting it to a valid, non-empty path.
+2026-06-14T02:33:46.011569Z 0 [System] [MY-010116] [Server] E:\environment\mysql-8.0.46-winx64-bin\bin\mysqld.exe (mysqld 8.0.46) starting as process 31412
+2026-06-14T02:33:46.108230Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-06-14T02:33:46.867801Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-06-14T02:33:47.320387Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+2026-06-14T02:33:47.321033Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+2026-06-14T02:33:47.398960Z 0 [System] [MY-010931] [Server] E:\environment\mysql-8.0.46-winx64-bin\bin\mysqld.exe: ready for connections. Version: '8.0.46'  socket: ''  port: 3306  MySQL Community Server - GPL.
+2026-06-14T02:33:47.643398Z 8 [Warning] [MY-013360] [Server] Plugin mysql_native_password reported: ''mysql_native_password' is deprecated and will be removed in a future release. Please use caching_sha2_password instead'
+2026-06-15T02:04:56.813044Z 0 [Warning] [MY-010097] [Server] Insecure configuration for --secure-file-priv: Current value does not restrict location of generated files. Consider setting it to a valid, non-empty path.
+2026-06-15T02:04:56.813196Z 0 [System] [MY-010116] [Server] E:\environment\mysql-8.0.46-winx64-bin\bin\mysqld.exe (mysqld 8.0.46) starting as process 28056
+2026-06-15T02:04:56.928839Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-06-15T02:04:57.535227Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-06-15T02:04:57.887737Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+2026-06-15T02:04:57.888366Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+2026-06-15T02:04:58.191873Z 0 [System] [MY-010931] [Server] E:\environment\mysql-8.0.46-winx64-bin\bin\mysqld.exe: ready for connections. Version: '8.0.46'  socket: ''  port: 3306  MySQL Community Server - GPL.
+2026-06-15T02:04:58.204662Z 8 [Warning] [MY-013360] [Server] Plugin mysql_native_password reported: ''mysql_native_password' is deprecated and will be removed in a future release. Please use caching_sha2_password instead'
+2026-06-20T06:50:45.063917Z 0 [Warning] [MY-010097] [Server] Insecure configuration for --secure-file-priv: Current value does not restrict location of generated files. Consider setting it to a valid, non-empty path.
+2026-06-20T06:50:45.064181Z 0 [System] [MY-010116] [Server] E:\environment\mysql-8.0.46-winx64-bin\bin\mysqld.exe (mysqld 8.0.46) starting as process 11756
+2026-06-20T06:50:45.143046Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-06-20T06:50:45.747299Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-06-20T06:50:46.094671Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+2026-06-20T06:50:46.095372Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+2026-06-20T06:50:46.161374Z 0 [System] [MY-010931] [Server] E:\environment\mysql-8.0.46-winx64-bin\bin\mysqld.exe: ready for connections. Version: '8.0.46'  socket: ''  port: 3306  MySQL Community Server - GPL.
+2026-06-20T06:50:46.190093Z 8 [Warning] [MY-013360] [Server] Plugin mysql_native_password reported: ''mysql_native_password' is deprecated and will be removed in a future release. Please use caching_sha2_password instead'
+2026-06-21T02:36:31.900742Z 0 [Warning] [MY-010097] [Server] Insecure configuration for --secure-file-priv: Current value does not restrict location of generated files. Consider setting it to a valid, non-empty path.
+2026-06-21T02:36:31.900846Z 0 [System] [MY-010116] [Server] E:\environment\mysql-8.0.46-winx64-bin\bin\mysqld.exe (mysqld 8.0.46) starting as process 22788
+2026-06-21T02:36:31.991460Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-06-21T02:36:32.684865Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-06-21T02:36:33.043699Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+2026-06-21T02:36:33.044526Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+2026-06-21T02:36:33.261570Z 0 [System] [MY-010931] [Server] E:\environment\mysql-8.0.46-winx64-bin\bin\mysqld.exe: ready for connections. Version: '8.0.46'  socket: ''  port: 3306  MySQL Community Server - GPL.
+2026-06-21T02:36:33.545937Z 8 [Warning] [MY-013360] [Server] Plugin mysql_native_password reported: ''mysql_native_password' is deprecated and will be removed in a future release. Please use caching_sha2_password instead'

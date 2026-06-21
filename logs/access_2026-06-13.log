@@ -1,1 +1,2 @@
 ts=2026-06-13T15:36:48.463 level=INFO service=http event=http_request request_id=cd6554cf-26a7-4358-b432-bfede782fee9 path=/api/langgraph/query method=POST status=500 client=testclient:50000 elapsed_ms=12.12 source=app.core.logger:log_event:280
+ts=2026-06-13T15:37:51.196 level=INFO service=http event=http_request request_id=21a387f5-b742-4a78-afe8-b3f6a5c86ba8 path=/api/langgraph/query method=POST status=200 client=testclient:50000 elapsed_ms=10.44 source=app.core.logger:log_event:280

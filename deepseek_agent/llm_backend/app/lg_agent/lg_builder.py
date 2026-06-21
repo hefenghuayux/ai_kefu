@@ -55,6 +55,14 @@ class AdditionalGuardrailsOutput(BaseModel):
 logger = get_logger(service="lg_builder")
 
 
+def _state_messages_with_context(state: AgentState) -> list[Any]:
+    context_bundle = getattr(state, "context_bundle", {}) or {}
+    context_text = context_bundle.get("prompt_context")
+    if context_text:
+        return [{"role": "system", "content": context_text}] + state.messages
+    return state.messages
+
+
 def _config_log_fields(config: RunnableConfig) -> dict[str, Any]:
     configurable = config.get("configurable", {}) if config else {}
     return {
@@ -102,7 +110,7 @@ async def analyze_and_route_query(
     # 拼接提示模版 + 用户的实时问题（包含历史上下文对话） 
     messages = [
         {"role": "system", "content": ROUTER_SYSTEM_PROMPT}
-    ] + state.messages
+    ] + _state_messages_with_context(state)
     log_event(
         node_logger,
         "INFO",
@@ -215,7 +223,7 @@ async def respond_to_general_query(
         logic=state.router["logic"]
     )
     
-    messages = [{"role": "system", "content": system_prompt}] + state.messages
+    messages = [{"role": "system", "content": system_prompt}] + _state_messages_with_context(state)
     try:
         response = await model.ainvoke(messages)
         log_event(
@@ -396,7 +404,7 @@ async def get_additional_info(
         system_prompt = GET_ADDITIONAL_SYSTEM_PROMPT.format(
             logic=state.router["logic"]
         )
-        messages = [{"role": "system", "content": system_prompt}] + state.messages
+        messages = [{"role": "system", "content": system_prompt}] + _state_messages_with_context(state)
         response = await model.ainvoke(messages)
         log_event(
             node_logger,
@@ -535,7 +543,7 @@ async def create_image_query(
                     system_prompt = GET_IMAGE_SYSTEM_PROMPT.format(
                         image_description=image_description
                     )
-                    messages = [{"role": "system", "content": system_prompt}] + state.messages
+                    messages = [{"role": "system", "content": system_prompt}] + _state_messages_with_context(state)
                     response = await model.ainvoke(messages)
                     return {"messages": [response]}    
         
@@ -656,10 +664,12 @@ async def create_research_plan(
     # return multi_tool_workflow
     # 准备输入状态
     last_message = state.messages[-1].content if state.messages else ""
+    context_bundle = getattr(state, "context_bundle", {}) or {}
+    history = context_bundle.get("history_records") or []
     input_state = {
         "question": last_message,
         "data": [],
-        "history": []
+        "history": history
     }
     
     # 执行工作流
@@ -676,6 +686,18 @@ async def create_research_plan(
     try:
         response = await multi_tool_workflow.ainvoke(input_state)
         answer = response.get("answer", "")
+        evidence_items = []
+        for cypher in response.get("cyphers", []) or []:
+            task = cypher.task if hasattr(cypher, "task") else cypher.get("task", "")
+            records = cypher.records if hasattr(cypher, "records") else cypher.get("records", {})
+            evidence_items.append(
+                {
+                    "tool_name": "multi_tool_workflow",
+                    "query_text": task or last_message,
+                    "result_digest": f"{task} -> {str(records)[:600]}",
+                    "raw_ref": "langgraph_state",
+                }
+            )
         log_event(
             node_logger,
             "INFO",
@@ -688,8 +710,9 @@ async def create_research_plan(
             output_len=len(answer),
             llm_output_len=len(answer),
             llm_output_preview=answer[:500],
+            evidence_count=len(evidence_items),
         )
-        return {"messages": [AIMessage(content=response["answer"])]}
+        return {"messages": [AIMessage(content=response["answer"])], "tool_evidence": evidence_items}
     except Exception as e:
         log_event(
             node_logger,
@@ -732,7 +755,7 @@ async def check_hallucinations(
 
     messages = [
         {"role": "system", "content": system_prompt}
-    ] + state.messages
+    ] + _state_messages_with_context(state)
 
     node_logger = logger.bind(**_config_log_fields(config), node="check_hallucinations")
     log_event(node_logger, "INFO", "node_started", message_count=len(state.messages))

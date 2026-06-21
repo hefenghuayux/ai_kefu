@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from dataclasses import dataclass, field
-from typing import Annotated, Literal, TypedDict, List
+from typing import Annotated, Any, Literal, TypedDict, List
 from langchain_core.messages import AnyMessage
 from langgraph.graph import add_messages
 
@@ -28,6 +28,8 @@ class InputState:
     """
 
     messages: Annotated[list[AnyMessage], add_messages]
+    context_bundle: dict[str, Any] = field(default_factory=dict)
+    tool_evidence: list[dict[str, Any]] = field(default_factory=list)
     
     """Messages track the primary execution state of the agent.
 

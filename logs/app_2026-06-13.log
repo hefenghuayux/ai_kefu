@@ -1,2 +1,12 @@
 ts=2026-06-13T15:36:48.463 level=INFO service=main event=langgraph_started request_id=cd6554cf-26a7-4358-b432-bfede782fee9 conversation_id=123 user_id=1 status=started has_image=false input_query_len=16 phase=request query_len=16 source=app.core.logger:log_event:280
 ts=2026-06-13T15:36:48.463 level=INFO service=main event=conversation_state_created request_id=cd6554cf-26a7-4358-b432-bfede782fee9 conversation_id=123 user_id=1 thread_id=123 source=app.core.logger:log_event:280
+ts=2026-06-13T15:37:51.193 level=INFO service=main event=langgraph_started request_id=21a387f5-b742-4a78-afe8-b3f6a5c86ba8 conversation_id=123 user_id=1 status=started has_image=false input_query_len=16 phase=request query_len=16 source=app.core.logger:log_event:280
+ts=2026-06-13T15:37:51.195 level=INFO service=main event=conversation_state_created request_id=21a387f5-b742-4a78-afe8-b3f6a5c86ba8 conversation_id=123 user_id=1 thread_id=123 source=app.core.logger:log_event:280
+ts=2026-06-13T15:37:51.196 level=INFO service=main event=stream_started request_id=21a387f5-b742-4a78-afe8-b3f6a5c86ba8 conversation_id=123 user_id=1 thread_id=123 status=started mode=new_input phase=request source=app.core.logger:log_event:280
+ts=2026-06-13T15:37:51.196 level=INFO service=main event=stream_finished request_id=21a387f5-b742-4a78-afe8-b3f6a5c86ba8 conversation_id=123 user_id=1 thread_id=123 status=success elapsed_ms=0 content_len=15 message_count=1 mode=new_input output_len=15 phase=request source=app.core.logger:log_event:280
+ts=2026-06-13T15:48:52.570 level=INFO service=create_context_tables message="Creating context memory tables if they do not exist..." source=__main__:create_context_tables:18
+ts=2026-06-13T15:52:48.990 level=INFO service=create_context_tables message="Creating context memory tables if they do not exist..." source=__main__:create_context_tables:18
+ts=2026-06-13T22:03:15.635 level=INFO service=create_context_tables message="Creating context memory tables if they do not exist..." source=__main__:create_context_tables:18
+ts=2026-06-13T22:03:16.862 level=INFO service=create_context_tables message="Context memory table creation completed." source=__main__:create_context_tables:21
+ts=2026-06-13T22:04:12.938 level=INFO service=create_context_tables message="Creating context memory tables if they do not exist..." source=__main__:create_context_tables:18
+ts=2026-06-13T22:04:13.028 level=INFO service=create_context_tables message="Context memory table creation completed." source=__main__:create_context_tables:22
