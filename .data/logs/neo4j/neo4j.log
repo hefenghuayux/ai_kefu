@@ -163,3 +163,5 @@
 2026-06-21 02:37:01.337+0000 INFO  name: system
 2026-06-21 02:37:01.338+0000 INFO  creationDate: 2026-05-13T09:29:12.847Z
 2026-06-21 02:37:01.338+0000 INFO  Started.
+2026-06-21 08:32:42.640+0000 WARN  [bolt-9] The client is unauthorized due to authentication failure.
+2026-06-21 09:38:52.890+0000 WARN  [bolt-12] The client is unauthorized due to authentication failure.

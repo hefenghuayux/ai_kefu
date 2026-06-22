@@ -12399,3 +12399,12 @@ java.nio.file.InvalidPathException: Illegal char <"> at index 0: "E:\environment
 2026-06-21 02:37:01.337+0000 INFO  [o.n.g.f.DatabaseManagementServiceFactory] id: FB3B039A7857AC973A9E3B82A4DF286D16BC87314DB14D9088A1FB069A158A18
 2026-06-21 02:37:01.338+0000 INFO  [o.n.g.f.DatabaseManagementServiceFactory] name: system
 2026-06-21 02:37:01.338+0000 INFO  [o.n.g.f.DatabaseManagementServiceFactory] creationDate: 2026-05-13T09:29:12.847Z
+2026-06-21 08:32:42.671+0000 WARN  [o.n.b.p.c.c.c.AtomicSchedulingConnection] [bolt-9] The client is unauthorized due to authentication failure.
+2026-06-21 09:30:59.170+0000 WARN  [o.n.k.i.c.VmPauseMonitorComponent] Detected VM stop-the-world pause: {pauseTime=373, gcTime=0, gcCount=0}
+2026-06-21 09:30:59.485+0000 WARN  [o.n.k.i.c.VmPauseMonitorComponent] Detected VM stop-the-world pause: {pauseTime=570, gcTime=0, gcCount=0}
+2026-06-21 09:38:52.906+0000 WARN  [o.n.b.p.c.c.c.AtomicSchedulingConnection] [bolt-12] The client is unauthorized due to authentication failure.
+2026-06-21 09:39:37.127+0000 INFO  [o.n.k.i.t.l.c.CheckPointerImpl] [neo4j/0a5c9463] Checkpoint triggered by "Scheduled checkpoint for every 15 minutes threshold" @ txId: 71, append index: 71 checkpoint started...
+2026-06-21 09:39:37.242+0000 INFO  [o.n.k.i.t.l.c.CheckPointerImpl] [neo4j/0a5c9463] Checkpoint triggered by "Scheduled checkpoint for every 15 minutes threshold" @ txId: 71, append index: 71 checkpoint completed in 112ms. Checkpoint flushed 82 pages (0% of total available pages), in 80 IOs. Checkpoint performed with IO limit: unlimited, paused in total 0 times( 0 millis).
+2026-06-21 09:39:37.247+0000 INFO  [o.n.k.i.t.l.p.LogPruningImpl] [neo4j/0a5c9463] No log version pruned. The strategy used was '2 days'. 
+2026-06-21 09:47:37.905+0000 INFO  [o.n.c.i.c.CypherQueryCaches] [neo4j/0a5c9463] Discarded stale query from the query cache after 25832 seconds. Reason: NodesAllCardinality changed from 208.0 to 244.0, which is a divergence of 0.14754098360655737 which is greater than threshold 0.09786931571012553. Query id: 81.
+2026-06-21 09:47:38.188+0000 INFO  [o.n.c.i.c.CypherQueryCaches] [neo4j/0a5c9463] Discarded stale query from the query cache after 25832 seconds. Reason: NodesAllCardinality changed from 208.0 to 244.0, which is a divergence of 0.14754098360655737 which is greater than threshold 0.09786990230685148. Query id: 83.
